@@ -36,10 +36,10 @@ def insert_user_data(conn: connection, data_user: dict):
     """
     cur = conn.cursor(cursor_factory=extras.RealDictCursor)
     query = "INSERT INTO users(email, first_name, last_name) VALUES (%s, %s, %s)"
-    cur.execute(query,(data_user["email"],
-                       data_user["first_name"],
-                       data_user["last_name"]))
-    
+    cur.execute(query, (data_user["email"],
+                        data_user["first_name"],
+                        data_user["last_name"]))
+
     conn.commit()
     cur.close()
 
@@ -51,12 +51,12 @@ def insert_product_data(conn: connection, data_product: dict):
 
     cur = conn.cursor(cursor_factory=extras.RealDictCursor)
     query = "INSERT INTO products (product_name, product_url, website_name) VALUES (%s, %s, %s)"
-    cur.execute(query, (data_product.get('product_name','Unknown'),
+    cur.execute(query, (data_product.get('product_name', 'Unknown'),
                         data_product['product_url'],
                         data_product['website_name']))
     conn.commit()
     cur.close()
-    
+
 
 @app.route('/')
 def index():
@@ -79,9 +79,9 @@ def submit():
         url = request.form.get('url')
 
         header = {
-        'authority':  environ["AUTHORITY"],
-        'user-agent': environ["USER_AGENT"]
-    }
+            'authority':  environ["AUTHORITY"],
+            'user-agent': environ["USER_AGENT"]
+        }
 
         product_data = scrape_asos_page(url, header)
         print(product_data)

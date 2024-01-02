@@ -1,4 +1,6 @@
-"""API"""
+"""
+API.
+"""
 
 from flask import Flask, render_template, request
 
@@ -9,13 +11,17 @@ submissions = []
 
 @app.route('/')
 def index():
-    """Displays the HTML homepage"""
+    """
+    Displays the HTML homepage.
+    """
     return render_template('input_website.html')
 
 
 @app.route('/submit', methods=["POST"])
 def submit():
-    """Handles data submissions"""
+    """
+    Handles data submissions.
+    """
     if request.method == 'POST':
         first_name = request.form.get('firstName').capitalize()
         last_name = request.form.get('lastName').capitalize()

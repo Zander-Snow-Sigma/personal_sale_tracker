@@ -1,47 +1,59 @@
-"""Extracts/Scrapes the desired information from the required product."""
+"""
+Extracts/scrapes the desired information from the required product.
+"""
+import json
 from os import environ
-from urllib.request import urlopen
+from urllib.parse import urlparse
+
 
 from bs4 import BeautifulSoup
 from dotenv import load_dotenv
-import requests as req
+import requests
 
 
-def scrape_product_page(link: str, headers: dict) -> dict:
-    """Returns a dict of scraped details for a specific product."""
-
-    res = req.get(link, headers=headers, timeout=5)
-    soup = BeautifulSoup(res.content, features="html.parser")
-    price = soup.find_all('price-screenreader-only-text')
-    print(price)
-
-    product_price_element = soup.find(
-        'span', {'data-testid': 'price-screenreader-only-text'})
-    product = {
-        "name": soup.find("h1", class_="jcdpl").text.strip(),
-        "price":  product_price_element}
-
-    return product
+def get_domain_name(url: str) -> str:
+    """
+    Returns the domain name of the url.
+    """
+    parsed_url = urlparse(url)
+    domain_name = '{uri.netloc}'.format(uri=parsed_url)
+    return domain_name
 
 
-def get_html(url):
-    """gets html from webpage"""
-    page = urlopen(url)
-    html_bytes = page.read()
-    html = html_bytes.decode("utf_8")
-    return html
+def scrape_asos_page(url: str, header: dict) -> dict:
+    """
+    Scrapes an ASOS page and returns a dict of desired data about the product.
+    """
+    page = requests.get(url, headers=header)
+    soup = BeautifulSoup(page.text, "html.parser").find(
+        "script", type="application/ld+json")
+    product_data = json.loads(soup.string)
+
+    price_endpoint = f"https://www.asos.com/api/product/catalogue/v3/stockprice?productIds={product_data['productID']}&store=COM&currency=GBP"
+
+    price = requests.get(price_endpoint).json()[
+        0]["productPrice"]["current"]["text"]
+
+    domain_name = get_domain_name(url)
+
+    wanted_prod_data = {
+        "product_name": product_data["name"],
+        "image_URL": product_data["image"],
+        "price": price,
+        "product_url": url,
+        "website_name": domain_name
+    }
+
+    return wanted_prod_data
 
 
 if __name__ == "__main__":
 
     load_dotenv()
 
-    headers = {
+    header = {
         'authority':  environ["AUTHORITY"],
-        'user-agent': environ["USER_AGENT"],
+        'user-agent': environ["USER_AGENT"]
     }
 
-    product_page = scrape_product_page(
-        "https://www.asos.com/asos-design/asos-design-chiffon-bias-maxi-skirt-in-leopard-print/prd/205497720#colourWayId-205497727", headers)
-
-    print(product_page)
+    print(scrape_asos_page(environ["EXAMPLE_PAGE"], header))

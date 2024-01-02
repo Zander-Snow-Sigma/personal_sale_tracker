@@ -18,13 +18,16 @@ def get_database_connection() -> connection:
     """
     Return a connection our database.
     """
-    return connect(
-        user=environ["DB_USER"],
-        password=environ["DB_PASSWORD"],
-        host=environ["DB_HOST"],
-        port=environ["DB_PORT"],
-        database=environ["DB_NAME"]
-    )
+    try:
+        return connect(
+            user=environ["DB_USER"],
+            password=environ["DB_PASSWORD"],
+            host=environ["DB_HOST"],
+            port=environ["DB_PORT"],
+            database=environ["DB_NAME"]
+        )
+    except ConnectionError as error:
+        return error
 
 
 def insert_user_data(conn: connection, data_user: dict):
@@ -91,11 +94,6 @@ def submit():
 
         insert_user_data(connection, user_data)
         insert_product_data(connection, product_data)
-
-        print("Form Submitted:")
-        for key, value in user_data.items():
-            print(f"{key}: {value}")
-        print("\n")
 
     return render_template('input_website.html')
 

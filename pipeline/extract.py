@@ -27,28 +27,32 @@ def scrape_asos_page(url: str, header: dict) -> dict:
     page = requests.get(url, headers=header)
     soup = BeautifulSoup(page.text, "html.parser").find(
         "script", type="application/ld+json")
-    product_data = json.loads(soup.string)
+    try:
+        product_data = json.loads(soup.string)
 
-    domain_name = get_domain_name(url)
+        domain_name = get_domain_name(url)
 
-    wanted_prod_data = {
-        "product_name": product_data["name"],
-        "image_URL": product_data["image"],
-        "product_url": url,
-        "website_name": domain_name
-    }
+        wanted_prod_data = {
+            "product_name": product_data["name"],
+            "image_URL": product_data["image"],
+            "product_url": url,
+            "website_name": domain_name
+        }
 
-    price_endpoint = f"https://www.asos.com/api/product/catalogue/v3/stockprice?productIds={product_data['productID']}&store=COM&currency=GBP"
+        price_endpoint = f"https://www.asos.com/api/product/catalogue/v3/stockprice?productIds={product_data['productID']}&store=COM&currency=GBP"
 
-    price = requests.get(price_endpoint).json()[
-        0]["productPrice"]["current"]["value"]
+        price = requests.get(price_endpoint).json()[
+            0]["productPrice"]["current"]["value"]
 
-    if price:
-        wanted_prod_data["price"] = price
-    else:
-        wanted_prod_data["price"] = "Price not found"
+        if price:
+            wanted_prod_data["price"] = price
+        else:
+            wanted_prod_data["price"] = "Price not found"
 
-    return wanted_prod_data
+        return wanted_prod_data
+    
+    except AttributeError as error:
+        return error
 
 
 if __name__ == "__main__":

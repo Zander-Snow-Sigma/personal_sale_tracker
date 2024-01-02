@@ -23,7 +23,7 @@
 
 An ERD which clearly describes the tables in the schema and the data stored in each table:
 
-![sale_tracker_ERD](./diagrams/ERD_sale_tracker.png)
+![sale_tracker_ERD](./diagrams/ERD.png)
 
 ### Users Table
 

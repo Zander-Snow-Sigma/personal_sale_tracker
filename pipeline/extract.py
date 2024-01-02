@@ -3,7 +3,6 @@ Extracts/scrapes the desired information from the required product.
 """
 import json
 from os import environ
-from urllib.request import urlopen
 
 from bs4 import BeautifulSoup
 from dotenv import load_dotenv

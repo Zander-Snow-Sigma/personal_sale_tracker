@@ -12,6 +12,9 @@ import requests
 
 
 def get_domain_name(url: str) -> str:
+    """
+    Returns the domain name of the url.
+    """
     parsed_url = urlparse(url)
     domain_name = '{uri.netloc}'.format(uri=parsed_url)
     return domain_name

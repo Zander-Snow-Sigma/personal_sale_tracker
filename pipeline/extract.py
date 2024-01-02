@@ -32,14 +32,28 @@ def scrape_asos_page(url: str, header: dict) -> dict:
     price_endpoint = f"https://www.asos.com/api/product/catalogue/v3/stockprice?productIds={product_data['productID']}&store=COM&currency=GBP"
 
     price = requests.get(price_endpoint).json()[
-        0]["productPrice"]["current"]["text"]
+        0]["productPrice"]["current"]["value"]
+
+    if price:
+
+        domain_name = get_domain_name(url)
+
+        wanted_prod_data = {
+            "product_name": product_data["name"],
+            "image_URL": product_data["image"],
+            "price": price,
+            "product_url": url,
+            "website_name": domain_name
+        }
+
+        return wanted_prod_data
 
     domain_name = get_domain_name(url)
 
     wanted_prod_data = {
         "product_name": product_data["name"],
         "image_URL": product_data["image"],
-        "price": price,
+        "price": "Price not found",
         "product_url": url,
         "website_name": domain_name
     }

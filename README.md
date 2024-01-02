@@ -3,6 +3,7 @@
 
 ## Cloud Architecture
 
+![architecture_diagram](./diagrams/architecture_diagram.png)
 
 ### How it works
 

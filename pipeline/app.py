@@ -139,7 +139,7 @@ def submitted_form():
     """
     Displays the submitted form HTML page.
     """
-    return render_template('/submitted_form/submitted.html')
+    return render_template('/submitted_form/submitted_form.html')
 
 
 if __name__ == "__main__":

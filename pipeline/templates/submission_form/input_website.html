@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sale Tracker</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            font-family: Arial, sans-serif;
+            background-color: #d8eaeb;
+        }
+
+        h1 {
+            margin-top: 35px;
+            text-decoration: underline;
+            font-size: xx-large;
+        }
+
+        p {
+            max-width: 600px;
+            text-align: center;
+            margin: 35px 20px;
+            font-size: larger;
+        }
+
+        .container {
+            text-align: center;
+            max-width: 600px;
+            margin: 35px;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            background-color:  #91b1b3;
+        }
+
+        form {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        input[type="text"], input[type="email"], input[type="url"] {
+            padding: 10px;
+            border: 1px solid #d8eaeb;
+            border-radius: 4px;
+            background-color: #d8eaeb;
+        }
+
+        button {
+            padding: 10px 15px;
+            border: none;
+            border-radius: 4px;
+            background-color: #5f7b7d;
+            color: white;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background-color: #40959c;
+        }
+        
+        .buttons-container {
+            display: flex;
+            justify-content: center;
+            gap: 40px;
+        }
+    </style>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            var form = document.querySelector('form');
+            var submitButton = form.querySelector('button[type="submit"]');
+
+            submitButton.disabled = true; 
+
+            function checkFormValidity() {
+                var isValid = form.checkValidity();
+                submitButton.disabled = !isValid;
+            }
+
+            Array.from(form.elements).forEach(function(element) {
+                element.addEventListener('input', checkFormValidity);
+            });
+        });
+    </script>
+</head>
+<body>
+    <h1>Product Tracker</h1>
+    <p>Enter your name, email, and the complete URL of the product you would like to track.</p>
+
+    <div class="container" id="submit">
+        <h2>Please input your information</h2>
+        <form action="/submit" method="post">
+            <label for="firstName">First Name:</label>
+            <input type="text" id="firstName" name="firstName" required>
+
+            <label for="lastName">Last Name:</label>
+            <input type="text" id="lastName" name="lastName" required>
+
+            <label for="email">Email:</label>
+            <input type="email" id="email" name="email" required>
+
+            <label for="url">URL:</label>
+            <input type="url" id="url" name="url" required>
+
+            <button type="submit">Submit</button>
+        </form>
+    </div>
+    <div class="buttons-container">
+    <div class="index_button" id="index_return">
+        <button
+        id="return_to_index_button"
+        class="btn btn-warning"
+        onclick='window.location.href = "./"'
+        >
+        Return to Homepage
+        </button>
+    </div>
+
+    <div class="button" id="unsubscribe_button">
+            <button
+            id="unsubscribe"
+            class="btn btn-warning"
+            onclick='window.location.href = "./unsubscribe"'
+            >
+            Unsubscribe 📔
+            </button>
+        </div>
+        </div>
+</body>
+</html>

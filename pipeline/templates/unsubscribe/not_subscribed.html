@@ -16,7 +16,7 @@
         }
 
         h1 {
-            margin-top: 35px;
+            margin-top: 50px;
             text-decoration: underline;
             font-size: xx-large;
         }
@@ -57,40 +57,14 @@
             gap: 40px;
         }
     </style>
-     <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            var form = document.querySelector('form');
-            var submitButton = form.querySelector('button[type="submit"]');
-
-            submitButton.disabled = true; 
-
-            function checkFormValidity() {
-                var isValid = form.checkValidity();
-                submitButton.disabled = !isValid;
-            }
-
-            Array.from(form.elements).forEach(function(element) {
-                element.addEventListener('input', checkFormValidity);
-            });
-        });
-    </script>
 </meta>
 </meta>
 <body>
-    <h1>Unsubscribe Homepage</h1>
-    <p>Please enter your email to find your subscribed products.</p>
-
-    <div class="container" id="submit">
-        <h3>Please input your information</h3>
-        <form action="/unsubscribe" method="post">
-            <label for="email">Email:</label>
-            <input type="email" id="email" name="email" required>
-            <br> <br>
-            <button type="submit">Submit</button>
-        </form>
-    </div>
+    <h1>You are not subscribed to anything.</h1>
+    <br>
 
     <div class="buttons-container">
+
         <div class="button" id="homepage_button">
             <button
             id="homepage"

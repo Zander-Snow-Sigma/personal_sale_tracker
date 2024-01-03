@@ -84,6 +84,46 @@ def insert_product_data(conn: connection, data_product: dict):
         cur.close()
 
 
+def insert_subscription_data(conn: connection, user_email: str, product_url: str) -> None:
+    """
+    Inserts subscription data into the subscription table.
+    """
+
+    cur = conn.cursor(cursor_factory=extras.RealDictCursor)
+
+    user_query = "SELECT user_id FROM users WHERE email = (%s);"
+
+    cur.execute(user_query, (user_email,))
+
+    user_id = cur.fetchone()['user_id']
+
+    product_query = "SELECT product_id FROM products WHERE product_url = (%s);"
+
+    cur.execute(product_query, (product_url,))
+
+    product_id = cur.fetchone()['product_id']
+
+    insert_query = "INSERT INTO subscriptions (user_id, product_id) VALUES (%s, %s);"
+
+    cur.execute(insert_query, (user_id, product_id))
+
+    conn.commit()
+
+
+def get_products_from_email(conn: connection, email: str) -> list:
+    """
+    Returns list of products the user has subscribed to.
+    """
+    cur = conn.cursor(cursor_factory=extras.RealDictCursor)
+
+    query = """SELECT products.product_name
+                FROM users JOIN subscriptions ON users.user_id = subscriptions.user_id
+                JOIN products ON subscriptions.product_id = products.product_id WHERE users.email = (%s);"""
+    cur.execute(query, (email,))
+
+    return cur.fetchall()
+
+
 @app.route("/")
 def index():
     """
@@ -119,6 +159,7 @@ def submit():
 
         insert_user_data(connection, user_data)
         insert_product_data(connection, product_data)
+        insert_subscription_data(connection, email, url)
 
         return render_template('/submitted_form/submitted_form.html')
 
@@ -126,11 +167,34 @@ def submit():
         return render_template('/submission_form/input_website.html')
 
 
-@app.route('/unsubscribe')
+@app.route('/unsubscribe', methods=["GET", "POST"])
 def unsubscribe_index():
     """
     Displays the unsubscribe HTML page.
     """
+    conn = get_database_connection()
+    if request.method == "POST":
+        email = request.form.get('email')
+
+        cur = conn.cursor(cursor_factory=extras.RealDictCursor)
+
+        cur.execute(EMAIL_SELECTION_QUERY)
+        rows = cur.fetchall()
+
+        emails = [row["email"] for row in rows]
+
+        if email not in emails:
+            return render_template('/unsubscribe/not_subscribed.html')
+
+        user_products = get_products_from_email(conn, email)
+        print(user_products)
+
+        product_names = [product["product_name"]
+                         for product in user_products]
+        print(product_names)
+
+        return render_template('unsubscribe/product_list.html', names=product_names)
+
     return render_template('/unsubscribe/unsubscribe_website.html')
 
 

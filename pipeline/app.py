@@ -35,13 +35,27 @@ def insert_user_data(conn: connection, data_user: dict):
     Inserts user data into users table in required database.
     """
     cur = conn.cursor(cursor_factory=extras.RealDictCursor)
-    query = "INSERT INTO users(email, first_name, last_name) VALUES (%s, %s, %s)"
-    cur.execute(query, (data_user["email"],
-                        data_user["first_name"],
-                        data_user["last_name"]))
 
-    conn.commit()
-    cur.close()
+    selection_query = "SELECT email FROM users;"
+
+    cur.execute(selection_query)
+    rows = cur.fetchall()
+
+    emails = [row["email"] for row in rows]
+    print(emails)
+
+    if data_user['email'] in emails:
+        conn.commit()
+        cur.close()
+
+    else:
+        query = "INSERT INTO users(email, first_name, last_name) VALUES (%s, %s, %s)"
+        cur.execute(query, (data_user["email"],
+                            data_user["first_name"],
+                            data_user["last_name"]))
+
+        conn.commit()
+        cur.close()
 
 
 def insert_product_data(conn: connection, data_product: dict):
@@ -50,12 +64,26 @@ def insert_product_data(conn: connection, data_product: dict):
     """
 
     cur = conn.cursor(cursor_factory=extras.RealDictCursor)
-    query = "INSERT INTO products (product_name, product_url, website_name) VALUES (%s, %s, %s)"
-    cur.execute(query, (data_product.get('product_name', 'Unknown'),
-                        data_product['product_url'],
-                        data_product['website_name']))
-    conn.commit()
-    cur.close()
+    selection_query = "SELECT product_url FROM products;"
+
+    cur.execute(selection_query)
+    rows = cur.fetchall()
+
+    product_urls = [row["product_url"] for row in rows]
+    print(product_urls)
+
+    if data_product['product_url'] in product_urls:
+        conn.commit()
+        cur.close()
+
+    else:
+
+        query = "INSERT INTO products (product_name, product_url, website_name) VALUES (%s, %s, %s)"
+        cur.execute(query, (data_product.get('product_name', 'Unknown'),
+                            data_product['product_url'],
+                            data_product['website_name']))
+        conn.commit()
+        cur.close()
 
 
 @app.route('/')

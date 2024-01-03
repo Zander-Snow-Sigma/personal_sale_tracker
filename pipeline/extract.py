@@ -10,13 +10,15 @@ from bs4 import BeautifulSoup
 from dotenv import load_dotenv
 import requests
 
+STARTER_ASOS_API = "https://www.asos.com/api/product/catalogue/v3/stockprice?"
+
 
 def get_domain_name(url: str) -> str:
     """
     Returns the domain name of the url.
     """
     parsed_url = urlparse(url)
-    domain_name = '{uri.netloc}'.format(uri=parsed_url)
+    domain_name = f'{parsed_url.netloc}'
     return domain_name
 
 
@@ -24,24 +26,40 @@ def scrape_asos_page(url: str, header: dict) -> dict:
     """
     Scrapes an ASOS page and returns a dict of desired data about the product.
     """
-    page = requests.get(url, headers=header)
+    page = requests.get(url, headers=header, timeout=5)
     soup = BeautifulSoup(page.text, "html.parser").find(
         "script", type="application/ld+json")
     try:
         product_data = json.loads(soup.string)
+        print(product_data)
 
         domain_name = get_domain_name(url)
 
         wanted_prod_data = {
-            "product_name": product_data["name"],
-            "image_URL": product_data["image"],
             "product_url": url,
             "website_name": domain_name
         }
 
-        price_endpoint = f"https://www.asos.com/api/product/catalogue/v3/stockprice?productIds={product_data['productID']}&store=COM&currency=GBP"
+        if "name" in product_data.keys():
+            wanted_prod_data["product_name"] = product_data["name"]
+        else:
+            wanted_prod_data["product_name"] = product_data['@graph'][0]["name"]
 
-        price = requests.get(price_endpoint).json()[
+        if "image" in product_data.keys():
+            wanted_prod_data["image_URL"] = product_data["image"]
+        else:
+            wanted_prod_data["image_URL"] = product_data['@graph'][0]["image"]
+
+        if "productID" in product_data.keys():
+            price_endpoint = f"""{STARTER_ASOS_API}productIds={
+                product_data['productID']
+                }&store=COM&currency=GBP"""
+        else:
+            price_endpoint = f"""{STARTER_ASOS_API}productIds={
+                product_data['@graph'][0]['productID']
+                }&store=COM&currency=GBP"""
+
+        price = requests.get(price_endpoint, timeout=5).json()[
             0]["productPrice"]["current"]["value"]
 
         if price:
@@ -50,7 +68,7 @@ def scrape_asos_page(url: str, header: dict) -> dict:
             wanted_prod_data["price"] = "Price not found"
 
         return wanted_prod_data
-    
+
     except AttributeError as error:
         return error
 
@@ -59,9 +77,9 @@ if __name__ == "__main__":
 
     load_dotenv()
 
-    header = {
+    headers = {
         'authority':  environ["AUTHORITY"],
         'user-agent': environ["USER_AGENT"]
     }
 
-    print(scrape_asos_page(environ["EXAMPLE_PAGE"], header))
+    print(scrape_asos_page(environ["EXAMPLE_PAGE"], headers))

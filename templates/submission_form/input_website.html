@@ -67,17 +67,8 @@
     </style>
 </head>
 <body>
-    <h1>Welcome to the Sale Tracker</h1>
+    <h1>Product Tracker</h1>
     <p>Enter your name,email, and the complete URL of the product you would like to track.</p>
-
-    <div class="button" id="unsubscribe_button">
-        <button
-        id="unsubscribe"
-        class="btn btn-warning"
-        onclick='window.location.href = "./unsubscribe"'
-      >
-        Unsubscribe 📔
-    </div>
 
     <div class="container" id="submit">
         <h2>Please input your information</h2>
@@ -94,8 +85,24 @@
             <label for="url">URL:</label>
             <input type="url" id="url" name="url" required>
 
-            <button type="submit">Submit</button>
+            <button
+            id="submit_product"
+            class="btn btn-warning"
+            onclick='window.location.href = "./submitted"'
+            >Submit
+        </button>
         </form>
     </div>
+
+    <div class="index_button" id="index_return">
+        <button
+        id="return_to_index_button"
+        class="btn btn-warning"
+        onclick='window.location.href = "./"'
+        >
+        Return to Homepage
+    </button>
+    </div>
+
 </body>
 </html>

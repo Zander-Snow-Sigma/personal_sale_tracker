@@ -10,8 +10,11 @@ from psycopg2.extensions import connection
 
 from extract import scrape_asos_page
 
-
 app = Flask(__name__, template_folder='../templates')
+
+
+EMAIL_SELECTION_QUERY = "SELECT email FROM users;"
+PRODUCT_URL_SELECTION_QUERY = "SELECT product_url FROM products;"
 
 
 def get_database_connection() -> connection:
@@ -36,13 +39,10 @@ def insert_user_data(conn: connection, data_user: dict):
     """
     cur = conn.cursor(cursor_factory=extras.RealDictCursor)
 
-    selection_query = "SELECT email FROM users;"
-
-    cur.execute(selection_query)
+    cur.execute(EMAIL_SELECTION_QUERY)
     rows = cur.fetchall()
 
     emails = [row["email"] for row in rows]
-    print(emails)
 
     if data_user['email'] in emails:
         conn.commit()
@@ -64,13 +64,11 @@ def insert_product_data(conn: connection, data_product: dict):
     """
 
     cur = conn.cursor(cursor_factory=extras.RealDictCursor)
-    selection_query = "SELECT product_url FROM products;"
 
-    cur.execute(selection_query)
+    cur.execute(PRODUCT_URL_SELECTION_QUERY)
     rows = cur.fetchall()
 
     product_urls = [row["product_url"] for row in rows]
-    print(product_urls)
 
     if data_product['product_url'] in product_urls:
         conn.commit()
@@ -112,7 +110,6 @@ def submit():
         }
 
         product_data = scrape_asos_page(url, header)
-        print(product_data)
 
         user_data = {
             'first_name': first_name,

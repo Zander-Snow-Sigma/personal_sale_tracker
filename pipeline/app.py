@@ -10,7 +10,7 @@ from psycopg2.extensions import connection
 
 from extract import scrape_asos_page
 
-app = Flask(__name__, template_folder='../templates')
+app = Flask(__name__, template_folder='./templates')
 
 
 EMAIL_SELECTION_QUERY = "SELECT email FROM users;"
@@ -120,7 +120,7 @@ def submit():
         insert_user_data(connection, user_data)
         insert_product_data(connection, product_data)
 
-        return render_template('/submission_form/input_website.html')
+        return render_template('/submitted_form/submitted_form.html')
 
     if request.method == "GET":
         return render_template('/submission_form/input_website.html')

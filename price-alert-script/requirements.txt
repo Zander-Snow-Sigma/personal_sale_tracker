@@ -1,0 +1,7 @@
+boto3
+pylint
+pytest
+bs4
+python-dotenv
+requests
+psycopg2-binary

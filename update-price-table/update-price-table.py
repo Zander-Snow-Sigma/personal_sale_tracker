@@ -77,15 +77,19 @@ def scrape_asos_page(url: str, header: dict) -> dict:
         return error
 
 
+
 def insert_price_data(rds_conn: connection, product_data:dict):
     """Insert product_id, current product price and timestamp into prices table in database"""
-    cur = rds_conn.cursor(cursor_factory=extras.RealDictCursor)
     
-    cur.execute(
-        "INSERT INTO prices (updated_at, price, product_id) VALUES (current_timestamp, %s, %s)",(product_data['price'], product_data["product_id"]))
-    
+    with rds_conn.cursor(cursor_factory=extras.RealDictCursor) as cur:
+        extras.execute_values(cur,
+            """
+            INSERT INTO prices (updated_at, product_id, price) 
+            VALUES %s""",
+            product_data)
+        
     rds_conn.commit()
-    cur.close()
+    
 
     
 
@@ -108,13 +112,13 @@ if __name__ == "__main__":
     
 
     # print(scrape_asos_page(environ['EXAMPLE_PAGE'], headers))
-
+    current_datetime = datetime.now()
     product_price_data = []
     for product in products:
-        product_price_data.append({"product_id":product["product_id"], "product_price": scrape_asos_page(product["product_url"], headers)["price"]})
+        product_price_data.append((current_datetime, product["product_id"], scrape_asos_page(product["product_url"], headers)["price"]))
 
-
-    print(product_price_data)
+    # print(product_price_data)
+    insert_price_data(conn, product_price_data)
         
 
 

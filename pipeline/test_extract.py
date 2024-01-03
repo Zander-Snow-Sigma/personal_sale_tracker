@@ -18,24 +18,21 @@ class TestGetDomainName(unittest.TestCase):
     """
     Test class for the get_domain_name_function.
     """
-    @patch('urllib.parse.urlparse')
-    def test_get_domain_name(self, mock_urlparse):
+
+    def test_get_domain_name(self):
         """
         Tests that get_domain_name functions as expected.
         """
 
-        mock_urlparse.return_value = ASOS_DOMAIN
         result = get_domain_name(EXAMPLE_ASOS_URL)
 
         self.assertEqual(result, ASOS_DOMAIN)
 
-    @patch('urllib.parse.urlparse')
-    def test_get_domain_name_string(self, mock_urlparse):
+    def test_get_domain_name_string(self):
         """
         Tests that get_domain_name outputs a string.
         """
 
-        mock_urlparse.return_value = ASOS_DOMAIN
         result = get_domain_name(EXAMPLE_ASOS_URL)
 
         self.assertIsInstance(result, str)
@@ -90,4 +87,3 @@ class TestScrapeAsosPage(unittest.TestCase):
         result = scrape_asos_page(EXAMPLE_ASOS_URL, {'HeaderKey':'HeaderValue'})
 
         self.assertIsInstance(result, dict)
-        

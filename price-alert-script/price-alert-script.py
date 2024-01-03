@@ -18,42 +18,48 @@ def get_database_connection() -> connection:
     """
     Return a connection our database.
     """
-    # try:
-    #     return connect(
-    #         user=environ["DB_USER"],
-    #         password=environ["DB_PASSWORD"],
-    #         host=environ["DB_HOST"],
-    #         port=environ["DB_PORT"],
-    #         database=environ["DB_NAME"]
-    #     )
-    # except ConnectionError as error:
-    #     return error
-
-    return connect("dbname=sale_tracker user=harvindgrewal host=localhost")
+    try:
+        return connect(
+            user=environ["DB_USER"],
+            password=environ["DB_PASSWORD"],
+            host=environ["DB_HOST"],
+            port=environ["DB_PORT"],
+            database=environ["DB_NAME"]
+        )
+    except ConnectionError as error:
+        return error
 
 
-def get_latest_products():
+def get_prices_of_latest_pair_of_products(rds_conn: connection):
     """Query RDS products table for all products"""
 
-    conn = get_database_connection()
+    cur = rds_conn.cursor(cursor_factory=extras.RealDictCursor)
 
-    cur = conn.cursor(cursor_factory=extras.RealDictCursor)
+    # Get number of unique products from product table
+    cur.execute("SELECT count(*) FROM products;")
+    number_of_products = cur.fetchall()[0]['count']
 
-    cur.execute("SELECT * FROM product;")
-    rows = cur.fetchall()
-    print(rows)
+    # Get prices of last pair of price readings
+    cur.execute("SELECT * FROM prices ORDER BY updated_at ASC LIMIT (%s)",(number_of_products*2,))
+    latest_prices = cur.fetchall()
 
-    conn.close()
+    # Separate last prices from second last into two dicts and compare them
 
-    pass
+    
+    
+    return latest_prices
+
+   
+
+    
 
 
-def get_latest_prices():
+def get_latest_prices(rds_conn: connection):
     """Query RDS prices table for latest prices of all products"""
     pass
 
 
-def get_second_latest_prices():
+def get_second_latest_prices(rds_conn: connection):
     """Query RDS prices table for second latest prices of all products"""
     pass
 
@@ -63,7 +69,7 @@ def compare_latest_two_prices():
     pass
 
 
-def get_user_emails():
+def get_user_emails(rds_conn: connection):
     """Query RDS user table for User emails"""
     pass
 
@@ -73,6 +79,55 @@ def send_emails():
     pass
 
 
+def create_ses_client():
+    """
+    Create and return a Boto3 client for AWS SES using AWS credentials.
+    """
+    ses_client = boto3.client(
+        'ses',
+        aws_access_key_id=environ["AWS_ACCESS_KEY_ID"],
+        aws_secret_access_key=environ["AWS_SECRET_ACCESS_KEY"],
+        region_name="eu-west-2"
+    )
+    return ses_client
+
+
+def send_email(ses_client, sender, recipient, subject, body):
+
+    response = ses_client.send_email(
+        Source=sender,
+        Destination={'ToAddresses': [recipient]},
+        Message={
+            'Subject': {'Data': subject},
+            'Body': {'Text': {'Data': body}}
+        }
+    )
+
+    # Change print to log statement that gets logged to log file
+
+    print(f"Email sent! Message ID: {response['MessageId']}")
+
+
+def selectively_send_emails():
+    """Selectively sending emails to users if price drops"""
+
+    sender = 'your-sender@example.com'
+    recipient = 'recipient@example.com'
+    subject = 'Subject of the email'
+    body = 'Body of the email'
+
+    # Your condition for selective sending
+    should_send_email = True  # Replace with your own condition
+
+    if should_send_email:
+        send_email(sender, recipient, subject, body)
+    else:
+        print("Email not sent based on the condition.")
+
+
 if __name__ == "__main__":
 
     load_dotenv()
+    conn = get_database_connection()
+    print(get_latest_pair_of_products(conn))
+    ses_client = create_ses_client()

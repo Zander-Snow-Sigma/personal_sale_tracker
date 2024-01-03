@@ -16,7 +16,7 @@ ASOS_DOMAIN = 'asos.com'
 
 class TestGetDomainName(unittest.TestCase):
     """
-    Test class for the get_domain_name_function.
+    Test class for the get_domain_name() function.
     """
 
     def test_get_domain_name(self):
@@ -72,7 +72,7 @@ class TestScrapeAsosPage(unittest.TestCase):
         self, mock_get_domain_name, mock_beautiful_soup, mock_requests_get
         ):
         """
-        Tests that the web scraper functions returns a dictionary.
+        Tests that the web scraper function returns a dictionary.
         """
         mock_page = MagicMock()
         mock_page.text = EXAMPLE_HTML_TEXT

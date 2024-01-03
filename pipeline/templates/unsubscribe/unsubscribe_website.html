@@ -30,9 +30,9 @@
 
         .container {
             text-align: center;
-            max-width: 600px;
+            max-width: 2000px;
             margin: 35px;
-            padding: 20px;
+            padding: 40px;
             border: 1px solid #ddd;
             border-radius: 5px;
             box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
@@ -57,11 +57,38 @@
             gap: 40px;
         }
     </style>
+     <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            var form = document.querySelector('form');
+            var submitButton = form.querySelector('button[type="submit"]');
+
+            submitButton.disabled = true; 
+
+            function checkFormValidity() {
+                var isValid = form.checkValidity();
+                submitButton.disabled = !isValid;
+            }
+
+            Array.from(form.elements).forEach(function(element) {
+                element.addEventListener('input', checkFormValidity);
+            });
+        });
+    </script>
 </meta>
 </meta>
 <body>
-    <h1>Unsubscribe</h1>
+    <h1>Unsubscribe Homepage</h1>
     <p>Please enter your email to find your subscribed products.</p>
+
+    <div class="container" id="submit">
+        <h3>Please input your information</h3>
+        <form action="/unsubscribe" method="post">
+            <label for="email">Email:</label>
+            <input type="email" id="email" name="email" required>
+            <br> <br>
+            <button type="submit">Submit</button>
+        </form>
+    </div>
 
     <div class="buttons-container">
         <div class="button" id="homepage_button">

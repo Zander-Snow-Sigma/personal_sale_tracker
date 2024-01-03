@@ -84,15 +84,15 @@ def insert_product_data(conn: connection, data_product: dict):
         cur.close()
 
 
-@app.route('/')
+@app.route("/")
 def index():
     """
     Displays the HTML homepage.
     """
-    return render_template('input_website.html')
+    return render_template('/index.html')
 
 
-@app.route('/submit', methods=["POST"])
+@app.route('/submit', methods=["POST", "GET"])
 def submit():
     """
     Handles data submissions.
@@ -120,7 +120,26 @@ def submit():
         insert_user_data(connection, user_data)
         insert_product_data(connection, product_data)
 
-    return render_template('input_website.html')
+        return render_template('/submission_form/input_website.html')
+
+    if request.method == "GET":
+        return render_template('/submission_form/input_website.html')
+
+
+@app.route('/unsubscribe')
+def unsubscribe_index():
+    """
+    Displays the unsubscribe HTML page.
+    """
+    return render_template('/unsubscribe/unsubscribe_website.html')
+
+
+@app.route("/submitted")
+def submitted_form():
+    """
+    Displays the submitted form HTML page.
+    """
+    return render_template('/submitted_form/submitted.html')
 
 
 if __name__ == "__main__":

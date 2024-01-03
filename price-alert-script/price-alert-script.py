@@ -45,7 +45,7 @@ def get_prices_of_latest_pair_of_products(rds_conn: connection):
 
     # Separate last prices from second last into two dicts and compare them
 
-    
+    cur.close()
     
     return latest_prices
 

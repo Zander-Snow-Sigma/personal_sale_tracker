@@ -5,6 +5,7 @@ from urllib.parse import urlparse
 from psycopg2 import connect, extras
 from psycopg2.extensions import connection
 
+from datetime import datetime
 from bs4 import BeautifulSoup
 from dotenv import load_dotenv
 import requests
@@ -37,10 +38,8 @@ def get_product_data(rds_conn:connection):
     cur.execute("SELECT product_id, product_url FROM products;")
     rows = cur.fetchall()
     cur.close()
-    products = json.dumps(rows)
-    
-
-    return products
+  
+    return rows
 
 
 def scrape_asos_page(url: str, header: dict) -> dict:
@@ -52,7 +51,6 @@ def scrape_asos_page(url: str, header: dict) -> dict:
         "script", type="application/ld+json")
     try:
         product_data = json.loads(soup.string)
-        print(product_data)
 
         product_price_data = {}
         
@@ -78,13 +76,18 @@ def scrape_asos_page(url: str, header: dict) -> dict:
     except AttributeError as error:
         return error
 
-def scrape_price_data():
-    """Access URLs from product table in database to scrape webpages for price data"""
-    pass
 
-def insert_price_data():
+def insert_price_data(rds_conn: connection, product_data:dict):
     """Insert product_id, current product price and timestamp into prices table in database"""
-    pass
+    cur = rds_conn.cursor(cursor_factory=extras.RealDictCursor)
+    
+    cur.execute(
+        "INSERT INTO prices (updated_at, price, product_id) VALUES (current_timestamp, %s, %s)",(product_data['price'], product_data["product_id"]))
+    
+    rds_conn.commit()
+    cur.close()
+
+    
 
 def send_email_for_invalid_url():
     """In instances where URL is inaccessible, drop product from table and send user email to notify of error"""
@@ -102,13 +105,16 @@ if __name__ == "__main__":
 
     conn = get_database_connection()
     products = get_product_data(conn)
-    print(products)
+    
 
     # print(scrape_asos_page(environ['EXAMPLE_PAGE'], headers))
 
-
+    product_price_data = []
     for product in products:
-        print(scrape_asos_page(product["product_url"], headers))
+        product_price_data.append({"product_id":product["product_id"], "product_price": scrape_asos_page(product["product_url"], headers)["price"]})
+
+
+    print(product_price_data)
         
 
 

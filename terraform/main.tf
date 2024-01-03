@@ -17,6 +17,31 @@ data "aws_iam_role" "ecs_task_execution_role" {
   name = "ecsTaskExecutionRole"
 }
 
+
+## RDS
+
+resource "aws_db_instance" "c9-sales-tracker-db" {
+  identifier = "c9-sales-tracker-db"
+  allocated_storage = 20
+  max_allocated_storage = 1000
+  engine = "postgres"
+  engine_version = "15.4"
+  storage_type = "gp2"
+  instance_class = "db.t3.micro"
+  db_name = "c9_sales_tracker_db"
+  username = var.DB_USER
+  password = var.DB_PASSWORD
+  port = 5432
+  publicly_accessible = true
+  vpc_security_group_ids = ["sg-0aa3312e61b708062"]
+  db_subnet_group_name = "public_subnet_group"
+  performance_insights_enabled = true
+  performance_insights_retention_period = 7
+  parameter_group_name = "default.postgres15"
+  backup_retention_period = 1
+  skip_final_snapshot = true
+}
+
 ## S3 Bucket
 
 resource "aws_s3_bucket" "c9-sale-tracker-bucket" {
@@ -345,7 +370,7 @@ EOF
 ## Scheduler
 
 resource "aws_scheduler_schedule" "c9-sale-tracker-price-change-scheduler" {
-  name        = "c9-ladybirds-load-old-data"
+  name        = "c9-sale-tracker-price-change-scheduler"
 
   flexible_time_window {
     mode = "OFF"
@@ -376,7 +401,7 @@ resource "aws_iam_policy" "ecs-schedule-permissions" {
                 "ecs:RunTask"
             ],
             "Resource": [
-                aws_ecs_task_definition.c9-sale-tracker-rds-cleanup-task-def.arn
+                "${aws_ecs_task_definition.c9-sale-tracker-rds-cleanup-task-def.arn}"
             ],
             "Condition": {
                 "ArnLike": {
@@ -446,8 +471,8 @@ resource "aws_scheduler_schedule" "c9-sale-tracker-cleanup-schedule" {
   schedule_expression = "cron(05 09 * * ? *)" 
 
   target {
-    arn      = "arn:aws:ecs:eu-west-2:129033205317:cluster/c9-ecs-cluster" # arn of the ecs cluster to run on
-    # role that allows scheduler to start the task (explained later)
+    arn      = "arn:aws:ecs:eu-west-2:129033205317:cluster/c9-ecs-cluster"
+
     role_arn = aws_iam_role.iam_for_ecs.arn
 
     ecs_parameters {
@@ -461,142 +486,3 @@ resource "aws_scheduler_schedule" "c9-sale-tracker-cleanup-schedule" {
     }
   }
 }
-
-
-
-
-
-
-# Create new IAM Policy for EventBridge Scheduler
-resource "aws_iam_policy" "eb_access_policy" {
-  name        = "eb-access-policy"
-  description = "Policy for EventBridge Scheduler to trigger Step Functions"
-
-  policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [
-      {
-        Action = [
-          "states:StartExecution"
-        ],
-        Effect   = "Allow"
-        Resource = "${aws_sfn_state_machine.sfn_state_machine.arn}"
-      }
-    ]
-  })
-}
-
-# Create new IAM Role for EventBridge Scheduler
-resource "aws_iam_role" "eventbridge_scheduler_iam_role" {
-  name_prefix         = "eb-scheduler-role-"
-  managed_policy_arns = [aws_iam_policy.eb_access_policy.arn]
-  path = "/"
-  assume_role_policy  = <<EOF
-{
-    "Version": "2012-10-17",
-    "Statement": [
-        {
-            "Effect": "Allow",
-            "Principal": {
-                "Service": "scheduler.amazonaws.com"
-            },
-            "Action": "sts:AssumeRole"
-        }
-    ]
-}
-EOF
-}
-
-# Create new IAM Role for Step Function 
-resource "aws_iam_role" "sfn_iam_role" {
-  name = "sfn-iam-role"
-  managed_policy_arns = ["arn:aws:iam::aws:policy/AWSStepFunctionsFullAccess"]
-  assume_role_policy = <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Effect": "Allow",
-      "Principal": {
-        "Service": "states.amazonaws.com"
-      },
-      "Action": "sts:AssumeRole"
-    }
-  ]
-}
-EOF
-}
-
-# Attach IAM Policy to Role for Step Function 
-resource "aws_iam_role_policy_attachment" "step_function_role_attachment" {
-  role       = aws_iam_role.sfn_iam_role.name
-  policy_arn = "arn:aws:iam::aws:policy/service-role/AWSStepFunctionsFullAccess"
-}
-
-# Create new Eventbridge Scheduler
-resource "aws_scheduler_schedule" "my_scheduler" {
-  name = "my-scheduler"
-
-  flexible_time_window {
-    maximum_window_in_minutes = 3
-    mode = "FLEXIBLE"
-  }
-
-  schedule_expression = "rate(3 minutes)"
-
-  target {
-    arn      = aws_sfn_state_machine.c9_sale_tracker_sm.arn
-    role_arn = aws_iam_role.eventbridge_scheduler_iam_role.arn
-
-    input = jsonencode({
-      Payload = "Begin event"
-    })
-  }
-}
-
-output "EventBridgeSchedulerArn" {
-  value       = aws_scheduler_schedule.my_scheduler.arn
-  description = "EventBridge my-scheduler ARN"
-}
-
-output "StateMachineArn" {
-      value       = aws_sfn_state_machine.c9_sale_tracker_sm.arn
-  description = "Step Function my-state-machine ARN"
-}
-
-
-
-
-
-
-
-
-
-
-# resource "aws_scheduler_schedule" "c9-sale-tracker-query-schedule" {
-#   name        = "c9-sale-tracker-query-schedule"
-#   group_name  = "default"
-
-#   flexible_time_window {
-#     maximum_window_in_minutes = 15
-#     mode = "FLEXIBLE"
-#   }
-#   schedule_expression_timezone = "Europe/London"
-#   schedule_expression = "cron(0/3 * * * ? *)" 
-
-#   target {
-#     arn      = "arn:aws:ecs:eu-west-2:129033205317:cluster/c9-ecs-cluster" # arn of the ecs cluster to run on
-#     # role that allows scheduler to start the task (explained later)
-#     role_arn = aws_iam_role.iam_for_ecs.arn
-
-#     ecs_parameters {
-#       task_definition_arn = aws_ecs_task_definition.c9-sale-tracker-rds-cleanup-task-def.arn
-#       launch_type         = "FARGATE"
-
-#     network_configuration {
-#         subnets         = ["subnet-0d0b16e76e68cf51b","subnet-081c7c419697dec52","subnet-02a00c7be52b00368"]
-#         assign_public_ip = true
-#       }
-#     }
-#   }
-# }

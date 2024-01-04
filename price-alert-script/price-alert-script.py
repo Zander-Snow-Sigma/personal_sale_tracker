@@ -1,8 +1,7 @@
 """
 Script which compares latest product prices with prior entires and notifies user if price drops.
 """
-
-import json
+import logging
 from os import environ
 from urllib.parse import urlparse
 from psycopg2 import connect, extras
@@ -13,6 +12,9 @@ from itertools import groupby
 
 from dotenv import load_dotenv
 import boto3
+
+logging.basicConfig(filename='price_alert_logs.log', level=logging.INFO,
+                    format='%(asctime)s - %(levelname)s - %(message)s')
 
 
 def get_database_connection() -> connection:
@@ -104,9 +106,6 @@ def get_user_emails(rds_conn: connection) -> list[dict]:
             'is_discounted': is_discounted
         })
 
-    for item in list_of_subscription_instances:
-        print(item)
-
     return list_of_subscription_instances
 
 
@@ -136,9 +135,8 @@ def send_email(ses_client, sender, recipient, subject, body) -> None:
             'Body': {'Text': {'Data': body}}
         }
     )
-    # [TODO] Change print to log statement that gets logged to log file
 
-    print(f"Email sent! Message ID: {response['MessageId']}")
+    logging.info(f"Email sent! Message ID: {response['MessageId']}")
 
 
 def selectively_send_emails(ses_client, subscription_instances: list[list]):
@@ -146,8 +144,9 @@ def selectively_send_emails(ses_client, subscription_instances: list[list]):
     Selectively sending emails to users if price drops
     """
 
-    # [TODO]: Work out who the 'sender' should be
-    # [TODO]: Include the value of the discount in a concise, computationally efficient way
+    # [TODO]: Work out who the 'sender' should be.
+    # [TODO]: Include the value of the discount in a concise, computationally efficient way.
+    # [TODO]: Make email prettier.
 
     sender = 'trainee.tayla.dawson@sigmalabs.co.uk'
 
@@ -160,7 +159,7 @@ def selectively_send_emails(ses_client, subscription_instances: list[list]):
             send_email(ses_client, sender, recipient, subject, body)
 
         else:
-            print("Email not sent based on the condition.")
+            logging.info(f"Email not sent; no price change.")
 
 
 if __name__ == "__main__":

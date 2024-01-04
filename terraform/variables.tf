@@ -26,7 +26,7 @@ variable "DB_NAME" {
   default = "value"
 }
 
-variable "AWS_ACCESS_KEY_ID" {
+variable "AWS_ACCESS_KEY" {
   description = "Value of the aws access key id"
   type        = string
   default = "value"

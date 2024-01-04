@@ -49,6 +49,30 @@ resource "aws_s3_bucket" "c9-sale-tracker-bucket" {
   force_destroy = true
 }
 
+resource "aws_security_group" "c9-sale-tracker-website-sg" {
+  name        = "c9-sale-tracker-website-sg"
+  description = "Allow TLS inbound traffic"
+  vpc_id      = "vpc-04423dbb18410aece"
+
+  ingress {
+    description      = "TLS from VPC"
+    from_port        = 5000
+    to_port          = 5000
+    protocol         = "tcp"
+    cidr_blocks      = ["0.0.0.0/0"] 
+  }
+  egress {
+    from_port        = 0
+    to_port          = 0
+    protocol         = "-1"
+    cidr_blocks      = ["0.0.0.0/0"]
+    ipv6_cidr_blocks = ["::/0"]
+  }
+
+  tags = {
+    Name = "c9-sale-tracker-website-sg"
+  }
+}
 
 ## ECS Task Definitions
 
@@ -65,15 +89,25 @@ resource "aws_ecs_task_definition" "c9-sale-tracker-website-task-def" {
 [
   {
     "environment": [
+      {"name": "AUTHORITY", "value": "${var.AUTHORITY}"},
+      {"name": "USER_AGENT", "value": "${var.USER_AGENT}"},
       {"name": "DB_HOST", "value": "${var.DB_HOST}"},
       {"name": "DB_NAME", "value": "${var.DB_NAME}"},
       {"name": "DB_PASSWORD", "value": "${var.DB_PASSWORD}"},
       {"name": "DB_PORT", "value": "${var.DB_PORT}"},
-      {"name": "DB_USER", "value": "${var.DB_USER}"}
+      {"name": "DB_USER", "value": "${var.DB_USER}"},
+      {"name": "AWS_ACCESS_KEY", "value": "${var.AWS_ACCESS_KEY}"},
+      {"name": "AWS_SECRET_ACCESS_KEY", "value": "${var.AWS_SECRET_ACCESS_KEY}"}
     ],
     "name": "c9-sale-tracker-website",
-    "image": "",
-    "essential": true
+    "image": "129033205317.dkr.ecr.eu-west-2.amazonaws.com/c9-sale-tracker-website:latest",
+    "essential": true,
+    "portMappings": [
+      {
+        "containerPort" : 5000,
+        "hostPort"      : 5000
+      }
+    ]
   }
 ]
 TASK_DEFINITION
@@ -223,6 +257,7 @@ TASK_DEFINITION
 }
 
 
+
 ## ECS Services
 
 # Website/API
@@ -237,7 +272,7 @@ resource "aws_ecs_service" "c9-sale-tracker-website" {
   depends_on = [aws_ecs_task_definition.c9-sale-tracker-website-task-def]
 
 network_configuration {
-    security_groups = ["sg-020697b6514174b72"]
+    security_groups = [aws_security_group.c9-sale-tracker-website-sg.id]
     subnets         = ["subnet-0d0b16e76e68cf51b","subnet-081c7c419697dec52","subnet-02a00c7be52b00368"]
     assign_public_ip = true
   }

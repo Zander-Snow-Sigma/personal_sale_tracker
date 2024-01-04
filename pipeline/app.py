@@ -76,10 +76,11 @@ def insert_product_data(conn: connection, data_product: dict):
 
     else:
 
-        query = "INSERT INTO products (product_name, product_url, website_name) VALUES (%s, %s, %s)"
+        query = "INSERT INTO products (product_name, product_url, website_name, image_url) VALUES (%s, %s, %s, %s)"
         cur.execute(query, (data_product.get('product_name', 'Unknown'),
                             data_product['product_url'],
-                            data_product['website_name']))
+                            data_product['website_name'],
+                            data_product.get("image_URL", "N/A")))
         conn.commit()
         cur.close()
 
@@ -92,22 +93,22 @@ def insert_subscription_data(conn: connection, user_email: str, product_url: str
     cur = conn.cursor(cursor_factory=extras.RealDictCursor)
 
     user_query = "SELECT user_id FROM users WHERE email = (%s);"
-
     cur.execute(user_query, (user_email,))
-
     user_id = cur.fetchone()['user_id']
 
     product_query = "SELECT product_id FROM products WHERE product_url = (%s);"
-
     cur.execute(product_query, (product_url,))
-
     product_id = cur.fetchone()['product_id']
 
-    insert_query = "INSERT INTO subscriptions (user_id, product_id) VALUES (%s, %s);"
+    check_query = "SELECT * FROM subscriptions WHERE user_id = (%s) AND product_id = (%s);"
+    cur.execute(check_query, (user_id, product_id))
 
-    cur.execute(insert_query, (user_id, product_id))
+    if cur.fetchone() is None:
+        insert_query = "INSERT INTO subscriptions (user_id, product_id) VALUES (%s, %s);"
 
-    conn.commit()
+        cur.execute(insert_query, (user_id, product_id))
+
+        conn.commit()
 
 
 def get_products_from_email(conn: connection, email: str) -> list:
@@ -116,9 +117,11 @@ def get_products_from_email(conn: connection, email: str) -> list:
     """
     cur = conn.cursor(cursor_factory=extras.RealDictCursor)
 
-    query = """SELECT products.product_name
-                FROM users JOIN subscriptions ON users.user_id = subscriptions.user_id
-                JOIN products ON subscriptions.product_id = products.product_id WHERE users.email = (%s);"""
+    query = """SELECT users.first_name, products.product_name,products.product_url, products.product_id, products.image_url
+                FROM users
+                JOIN subscriptions ON users.user_id = subscriptions.user_id
+                JOIN products ON subscriptions.product_id = products.product_id
+                WHERE users.email = (%s);"""
     cur.execute(query, (email,))
 
     return cur.fetchall()
@@ -132,7 +135,7 @@ def index():
     return render_template('/index.html')
 
 
-@app.route('/submit', methods=["POST", "GET"])
+@app.route('/addproducts', methods=["POST", "GET"])
 def submit():
     """
     Handles data submissions.
@@ -150,6 +153,7 @@ def submit():
         }
 
         product_data = scrape_asos_page(url, header)
+        print(product_data)
 
         user_data = {
             'first_name': first_name,
@@ -167,7 +171,7 @@ def submit():
         return render_template('/submission_form/input_website.html')
 
 
-@app.route('/unsubscribe', methods=["GET", "POST"])
+@app.route('/subscriptions', methods=["GET", "POST"])
 def unsubscribe_index():
     """
     Displays the unsubscribe HTML page.
@@ -186,23 +190,64 @@ def unsubscribe_index():
         if email not in emails:
             return render_template('/unsubscribe/not_subscribed.html')
 
+        query = """SELECT subscriptions.user_id
+                FROM subscriptions
+                JOIN users ON subscriptions.user_id = users.user_id
+                WHERE users.email = (%s);"""
+
+        cur.execute(query, (email,))
+
+        result = cur.fetchall()
+
+        if not result:
+            return render_template('/unsubscribe/not_subscribed.html')
+
         user_products = get_products_from_email(conn, email)
         print(user_products)
 
         product_names = [product["product_name"]
                          for product in user_products]
         print(product_names)
+        user_first_name = [product["first_name"]
+                           for product in user_products][0]
+        print(user_first_name)
 
-        return render_template('unsubscribe/product_list.html', names=product_names)
+        return render_template('unsubscribe/product_list.html', names=user_products, firstname=user_first_name, user_email=email)
 
     return render_template('/unsubscribe/unsubscribe_website.html')
 
 
-@app.route("/submitted")
+@app.route('/delete_subscription', methods=["POST"])
+def delete_subscription():
+    conn = get_database_connection()
+    product_name = request.form.get('product_name')
+    email = request.form.get('user_email')
+    print(email)
+    print(product_name)
+
+    cur = conn.cursor(cursor_factory=extras.RealDictCursor)
+    cur.execute(
+        "SELECT product_id FROM products WHERE product_name = %s;", (product_name,))
+    product_id = cur.fetchone()['product_id']
+    print(product_id)
+
+    cur.execute("SELECT user_id FROM users WHERE email = %s;", (email,))
+    user_id = cur.fetchone()['user_id']
+    print(user_id)
+
+    cur.execute("DELETE FROM subscriptions WHERE product_id = (%s) AND user_id = (%s);",
+                (product_id, user_id))
+    conn.commit()
+
+    return 'Subscription deleted successfully', 200
+
+
+@app.route("/submitted", methods=["POST"])
 def submitted_form():
     """
     Displays the submitted form HTML page.
     """
+
     return render_template('/submitted_form/submitted_form.html')
 
 

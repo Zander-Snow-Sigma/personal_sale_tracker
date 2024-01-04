@@ -56,17 +56,14 @@ def get_prices_of_latest_pair_of_products(
     return latest_prices
 
 
-def compare_latest_two_prices(latest_price_entries: dict, product_id_of_interest: int) -> bool:
+def compare_latest_two_prices(latest_price_entries: dict) -> bool:
     """
     Compare values of price for last two  entries of each product for that specific ID.
     """
 
     try:
         if len(latest_price_entries) > 1:
-            if latest_price_entries[-2]['price'] < latest_price_entries[-1]['price']:
-                return True
-
-        return False
+            return latest_price_entries[-2]['price'] < latest_price_entries[-1]['price']
 
     except UnboundLocalError:
         return False
@@ -97,7 +94,7 @@ def get_user_emails(rds_conn: connection) -> list[dict]:
         product_name = [dict(row) for row in cur.fetchall()][0]['product_name']
 
         is_discounted = compare_latest_two_prices(
-            get_prices_of_latest_pair_of_products(rds_conn, product_id), product_id)
+            get_prices_of_latest_pair_of_products(rds_conn, product_id))
 
         list_of_subscription_instances.append({
             'user_id': user_id,
@@ -126,7 +123,7 @@ def create_ses_client():
     return ses_client
 
 
-def send_email(ses_client, sender, recipient, subject, body):
+def send_email(ses_client, sender, recipient, subject, body) -> None:
     """
     Sends an email with desired subject and body.
     """
@@ -145,7 +142,9 @@ def send_email(ses_client, sender, recipient, subject, body):
 
 
 def selectively_send_emails(ses_client, subscription_instances: list[list]):
-    """Selectively sending emails to users if price drops"""
+    """
+    Selectively sending emails to users if price drops
+    """
 
     # [TODO]: Work out who the 'sender' should be
     # [TODO]: Include the value of the discount in a concise, computationally efficient way
@@ -168,8 +167,6 @@ if __name__ == "__main__":
 
     load_dotenv()
     conn = get_database_connection()
-
-    print(get_prices_of_latest_pair_of_products(conn, 3), "*********")
 
     user_product_booleans = get_user_emails(conn)
     ses_client = create_ses_client()

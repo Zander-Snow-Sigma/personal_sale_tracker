@@ -127,6 +127,8 @@ def send_email(ses_client, sender, recipient, subject, body) -> None:
     Sends an email with desired subject and body.
     """
 
+    # [TODO]: Use HTML instead of Data
+
     response = ses_client.send_email(
         Source=sender,
         Destination={'ToAddresses': [recipient]},
@@ -147,6 +149,7 @@ def selectively_send_emails(ses_client, subscription_instances: list[list]):
     # [TODO]: Work out who the 'sender' should be.
     # [TODO]: Include the value of the discount in a concise, computationally efficient way.
     # [TODO]: Make email prettier.
+    # [TODO]: Add image of item
 
     sender = 'trainee.tayla.dawson@sigmalabs.co.uk'
 

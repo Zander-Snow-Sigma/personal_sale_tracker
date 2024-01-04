@@ -51,19 +51,6 @@ def get_prices_of_latest_pair_of_products(rds_conn: connection):
 
    
 
-    
-
-
-def get_latest_prices(rds_conn: connection):
-    """Query RDS prices table for latest prices of all products"""
-    pass
-
-
-def get_second_latest_prices(rds_conn: connection):
-    """Query RDS prices table for second latest prices of all products"""
-    pass
-
-
 def compare_latest_two_prices():
     """Compare values of price for last two  entries of each product"""
     pass
@@ -71,11 +58,6 @@ def compare_latest_two_prices():
 
 def get_user_emails(rds_conn: connection):
     """Query RDS user table for User emails"""
-    pass
-
-
-def send_emails():
-    """If price of product drops, send user email"""
     pass
 
 
@@ -129,5 +111,5 @@ if __name__ == "__main__":
 
     load_dotenv()
     conn = get_database_connection()
-    print(get_latest_pair_of_products(conn))
+    print(get_prices_of_latest_pair_of_products(conn))
     ses_client = create_ses_client()

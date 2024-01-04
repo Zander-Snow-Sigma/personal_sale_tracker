@@ -1,4 +1,7 @@
-
+"""
+Script which scrapes webpages and inserts updated price data into prices table in RDS
+Triggered every three minutes
+"""
 import json
 from os import environ
 from urllib.parse import urlparse
@@ -110,14 +113,12 @@ if __name__ == "__main__":
     conn = get_database_connection()
     products = get_product_data(conn)
     
-
-    # print(scrape_asos_page(environ['EXAMPLE_PAGE'], headers))
     current_datetime = datetime.now()
+
     product_price_data = []
     for product in products:
         product_price_data.append((current_datetime, product["product_id"], scrape_asos_page(product["product_url"], headers)["price"]))
 
-    # print(product_price_data)
     insert_price_data(conn, product_price_data)
         
 

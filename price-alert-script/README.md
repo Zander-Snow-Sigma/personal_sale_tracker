@@ -5,6 +5,10 @@
 
 # Environment variables
 
+- AUTHORITY
+- USER_AGENT
+- EXAMPLE_PAGE
+
 - DB_USER
 - DB_PASSWORD
 - DB_PORT

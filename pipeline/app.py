@@ -1,8 +1,10 @@
 """
 API.
 """
-from os import environ
+from os import environ, _Environ
 
+from boto3 import client
+from mypy_boto3_ses import SESClient
 from dotenv import load_dotenv
 from flask import Flask, render_template, request
 from psycopg2 import connect, extras
@@ -14,7 +16,7 @@ app = Flask(__name__, template_folder='./templates')
 
 
 EMAIL_SELECTION_QUERY = "SELECT email FROM users;"
-PRODUCT_URL_SELECTION_QUERY = "SELECT product_url FROM products;"
+PRODUCT_URL_SELECTION_QUERY = "SELECT product_name FROM products;"
 
 
 def get_database_connection() -> connection:
@@ -57,6 +59,11 @@ def insert_user_data(conn: connection, data_user: dict):
         conn.commit()
         cur.close()
 
+        ses_client = get_ses_client(environ)
+
+        ses_client.verify_email_address(
+            EmailAddress=data_user['email'])
+
 
 def insert_product_data(conn: connection, data_product: dict):
     """
@@ -68,9 +75,9 @@ def insert_product_data(conn: connection, data_product: dict):
     cur.execute(PRODUCT_URL_SELECTION_QUERY)
     rows = cur.fetchall()
 
-    product_urls = [row["product_url"] for row in rows]
+    product_urls = [row["product_name"] for row in rows]
 
-    if data_product['product_url'] in product_urls:
+    if data_product['product_name'] in product_urls:
         conn.commit()
         cur.close()
 
@@ -127,6 +134,16 @@ def get_products_from_email(conn: connection, email: str) -> list:
     return cur.fetchall()
 
 
+def get_ses_client(config: _Environ) -> SESClient:
+    """
+    Returns an SES client to send emails to users.
+    """
+
+    return client('ses',
+                  aws_access_key_id=config['AWS_ACCESS_KEY'],
+                  aws_secret_access_key=config['AWS_SECRET_ACCESS_KEY'])
+
+
 @app.route("/")
 def index():
     """
@@ -153,7 +170,6 @@ def submit():
         }
 
         product_data = scrape_asos_page(url, header)
-        print(product_data)
 
         user_data = {
             'first_name': first_name,
@@ -203,14 +219,9 @@ def unsubscribe_index():
             return render_template('/unsubscribe/not_subscribed.html')
 
         user_products = get_products_from_email(conn, email)
-        print(user_products)
 
-        product_names = [product["product_name"]
-                         for product in user_products]
-        print(product_names)
         user_first_name = [product["first_name"]
                            for product in user_products][0]
-        print(user_first_name)
 
         return render_template('unsubscribe/product_list.html', names=user_products, firstname=user_first_name, user_email=email)
 
@@ -220,20 +231,16 @@ def unsubscribe_index():
 @app.route('/delete_subscription', methods=["POST"])
 def delete_subscription():
     conn = get_database_connection()
-    product_name = request.form.get('product_name')
+    product_name = request.form.get("product_name")
     email = request.form.get('user_email')
-    print(email)
-    print(product_name)
 
     cur = conn.cursor(cursor_factory=extras.RealDictCursor)
     cur.execute(
         "SELECT product_id FROM products WHERE product_name = %s;", (product_name,))
     product_id = cur.fetchone()['product_id']
-    print(product_id)
 
     cur.execute("SELECT user_id FROM users WHERE email = %s;", (email,))
     user_id = cur.fetchone()['user_id']
-    print(user_id)
 
     cur.execute("DELETE FROM subscriptions WHERE product_id = (%s) AND user_id = (%s);",
                 (product_id, user_id))
@@ -253,4 +260,4 @@ def submitted_form():
 
 if __name__ == "__main__":
     load_dotenv()
-    app.run(debug=True)
+    app.run(debug=True, host="0.0.0.0")

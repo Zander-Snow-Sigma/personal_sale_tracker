@@ -40,16 +40,16 @@ def get_prices_of_latest_pair_of_products(rds_conn: connection):
     number_of_products = cur.fetchall()[0]['count']
 
     # Get prices of last pair of price readings
-    cur.execute("SELECT * FROM prices ORDER BY updated_at ASC LIMIT (%s)",(number_of_products*2,))
+    cur.execute("SELECT * FROM prices ORDER BY updated_at ASC LIMIT (%s)",
+                (number_of_products*2,))
     latest_prices = cur.fetchall()
 
     # Separate last prices from second last into two dicts and compare them
 
     cur.close()
-    
+
     return latest_prices
 
-   
 
 def compare_latest_two_prices():
     """Compare values of price for last two  entries of each product"""
@@ -90,19 +90,19 @@ def send_email(ses_client, sender, recipient, subject, body):
     print(f"Email sent! Message ID: {response['MessageId']}")
 
 
-def selectively_send_emails():
+def selectively_send_emails(ses_client):
     """Selectively sending emails to users if price drops"""
 
-    sender = 'your-sender@example.com'
-    recipient = 'recipient@example.com'
-    subject = 'Subject of the email'
-    body = 'Body of the email'
+    sender = 'trainee.harvind.grewal@sigmalabs.co.uk'
+    recipient = 'trainee.harvind.grewal@sigmalabs.co.uk'
+    subject = 'Test email'
+    body = 'Body of email'
 
     # Your condition for selective sending
     should_send_email = True  # Replace with your own condition
 
     if should_send_email:
-        send_email(sender, recipient, subject, body)
+        send_email(ses_client, sender, recipient, subject, body)
     else:
         print("Email not sent based on the condition.")
 
@@ -113,3 +113,5 @@ if __name__ == "__main__":
     conn = get_database_connection()
     print(get_prices_of_latest_pair_of_products(conn))
     ses_client = create_ses_client()
+
+    selectively_send_emails(ses_client)

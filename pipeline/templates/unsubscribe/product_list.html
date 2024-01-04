@@ -137,7 +137,7 @@
                         element.parentNode.parentNode.remove();
                     }
                 }
-                xhr_request.send("product_name=" + productName + "&user_email=" + userEmail);
+                xhr_request.send("product_name=" + encodeURIComponent(productName) + "&user_email=" + encodeURIComponent(userEmail));
             }
         }
     </script>

@@ -4,113 +4,125 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sale Tracker</title>
+    <link href="https://fonts.googleapis.com/css2?family=Source+Sans+Pro:wght@300;400;600;700&display=swap" rel="stylesheet">
     <style>
-        body {
+        * {
             margin: 0;
             padding: 0;
+            box-sizing: border-box;
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
+
+        body, button {
+            font-family: 'Source Sans Pro', sans-serif;
+        }
+
+        body {
+            background-color: #f7f7f7;
+            color: #4a4a4a;
+            line-height: 1.7;
             display: flex;
             flex-direction: column;
+            justify-content: center;
             align-items: center;
-            font-family: Arial, sans-serif;
-            background-color: #d8eaeb;
+            height: 100vh;
+            margin: 0;
+            padding: 0;
         }
 
         h1 {
-            margin-top: 35px;
-            text-decoration: underline;
-            font-size: xx-large;
+            font-size: 3rem;
+            font-weight: 700;
+            color: #333;
+            margin: 1.5rem 0;
         }
 
         p {
             max-width: 600px;
             text-align: center;
-            margin: 35px 20px;
-            font-size: larger;
+            margin: 1rem 20px;
+            font-size: 1rem;
+            color: #555;
         }
 
         .container {
             text-align: center;
-            max-width: 2000px;
-            margin: 35px;
-            padding: 40px;
+            justify-content: center;
+            min-width: 400px;
+            min-height: 250px;
+            max-width: 600px;
+            margin: 1rem;
+            padding: 2rem;
             border: 1px solid #ddd;
             border-radius: 5px;
             box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-            background-color:  #91b1b3;
-        }
-        
-        button {
-            padding: 10px 15px;
-            border: none;
-            border-radius: 4px;
-            background-color: #5f7b7d;
-            color: white;
-            cursor: pointer;
+            background-color: #ffffff;
         }
 
-        button:hover {
-            background-color: #40959c;
-        }
         .buttons-container {
             display: flex;
             justify-content: center;
-            gap: 40px;
+            gap: 1rem;
+            margin-top: 3rem;
         }
-    </style>
-     <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            var form = document.querySelector('form');
-            var submitButton = form.querySelector('button[type="submit"]');
 
-            submitButton.disabled = true; 
+        button {
+            padding: 1rem 1.5rem;
+            font-size: 1rem;
+            font-weight: 600;
+            border: 2px solid #007bff;
+            border-radius: 0.25rem;
+            background-color: transparent;
+            color: #007bff;
+            cursor: pointer;
+            outline: none;
+            min-width: 200px; /* Minimum width for the buttons */
+            max-width: 200px;
+        }
 
-            function checkFormValidity() {
-                var isValid = form.checkValidity();
-                submitButton.disabled = !isValid;
+        button:hover, button:focus {
+            background-color: #007bff;
+            color: #ffffff;
+            border-color: #007bff;
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            * {
+                transition: none;
+            }
+        }
+
+        @media (max-width: 600px) {
+            .buttons-container {
+                flex-direction: column;
+                gap: 1rem;
             }
 
-            Array.from(form.elements).forEach(function(element) {
-                element.addEventListener('input', checkFormValidity);
-            });
-        });
-    </script>
-</meta>
-</meta>
+            button {
+                margin-bottom: 1rem;
+                width: 100%; 
+            }
+        }
+    </style>
+</head>
 <body>
-    <h1>Unsubscribe Homepage</h1>
+    <h1>Subscriptions</h1>
     <p>Please enter your email to find your subscribed products.</p>
 
-    <div class="container" id="submit">
-        <h3>Please input your information</h3>
-        <form action="/unsubscribe" method="post">
+    <div class="container">
+        <h3>Please input your email</h3>
+        <form justify-content="center" action="/subscriptions" method="post">
+            <br>
             <label for="email">Email:</label>
             <input type="email" id="email" name="email" required>
-            <br> <br>
+            <br><br>
             <button type="submit">Submit</button>
         </form>
     </div>
 
     <div class="buttons-container">
-        <div class="button" id="homepage_button">
-            <button
-            id="homepage"
-            class="btn btn-warning"
-            onclick='window.location.href = "./"'
-            >
-            Return to Homepage 📔
-            </button>
-        </div>
-
-        <div class="button" id="add_product">
-            <button
-            id="add_product_button"
-            class="btn btn-warning"
-            onclick='window.location.href = "./submit"'
-            >
-            Add Product 🛒
-            </button>
-        </div>
+        <button id="homepage" onclick='window.location.href = "./"'>Homepage</button>
+        <button id="add_product_button" onclick='window.location.href = "./addproducts"'>Add Products</button>
     </div>
 </body>
-</head>
 </html>

@@ -96,6 +96,11 @@
             height: auto;
         }
 
+        .available {
+            text-align: center;
+            padding: 8px;
+        }
+
         @media (prefers-reduced-motion: reduce) {
             * {
                 transition: none;
@@ -155,6 +160,7 @@
                 <th>Action</th>
                 <th>Product Name</th>
                 <th>Image</th>
+                <th>Available?</th>
             </tr>
         </thead>
         <tbody>
@@ -165,6 +171,7 @@
                     </td>
                     <td><a href="{{ item.product_url }}">{{ item.product_name }}</a></td>
                     <td><img class="image" src="{{ item.image_url }}"/></td>
+                    <td class="available">{{ item.available }}</td>
                 </tr>
             {% endfor %}
         </tbody>

@@ -11,7 +11,6 @@ from dotenv import load_dotenv
 import requests
 
 STARTER_ASOS_API = "https://www.asos.com/api/product/catalogue/v3/stockprice?"
-VALID_WEBSITES = ["www.asos.com"]
 
 
 def get_domain_name(url: str) -> str:
@@ -28,11 +27,6 @@ def scrape_asos_page(url: str, header: dict) -> dict:
     Scrapes an ASOS page and returns a dict of desired data about the product.
     """
     domain_name = get_domain_name(url)
-
-    if domain_name in VALID_WEBSITES:
-        print("YAYYYYY")
-    if domain_name not in VALID_WEBSITES:
-        print("BOOOOO")
     page = requests.get(url, headers=header, timeout=5)
     soup = BeautifulSoup(page.text, "html.parser").find(
         "script", type="application/ld+json")

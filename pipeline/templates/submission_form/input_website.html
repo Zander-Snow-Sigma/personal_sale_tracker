@@ -169,13 +169,12 @@
         form.addEventListener('submit', function(event) {
             var isFormValid = checkInputValidity();
             if (!isFormValid) {
-                event.preventDefault(); // Prevent form submission if validation fails
+                event.preventDefault();
             }
         });
 
         Array.from(form.elements).forEach(function(element) {
             element.addEventListener('input', function() {
-                // Hide error messages when the user starts typing in any field
                 firstNameErrorMessage.style.display = 'none';
                 lastNameErrorMessage.style.display = 'none';
                 emailErrorMessage.style.display = 'none';
@@ -184,10 +183,6 @@
         });
     });
 </script>
-
-
-
-
 
 
 </head>

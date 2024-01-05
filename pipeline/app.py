@@ -170,7 +170,6 @@ def submit():
         }
 
         product_data = scrape_asos_page(url, header)
-        print(product_data)
 
         user_data = {
             'first_name': first_name,

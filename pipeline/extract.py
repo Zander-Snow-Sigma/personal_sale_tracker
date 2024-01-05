@@ -93,5 +93,3 @@ if __name__ == "__main__":
     headers = {
         'user-agent': environ["USER_AGENT"]
     }
-
-    print(scrape_asos_page(environ["EXAMPLE_PAGE"], headers))

@@ -83,11 +83,12 @@ def insert_product_data(conn: connection, data_product: dict):
 
     else:
 
-        query = "INSERT INTO products (product_name, product_url, website_name, image_url) VALUES (%s, %s, %s, %s)"
+        query = "INSERT INTO products (product_name, product_url, image_url, product_availability, website_name) VALUES (%s, %s, %s, %s, %s)"
         cur.execute(query, (data_product.get('product_name', 'Unknown'),
                             data_product['product_url'],
-                            data_product['website_name'],
-                            data_product.get("image_URL", "N/A")))
+                            data_product['image_URL'],
+                            data_product['product_availability'],
+                            data_product['website_name']))
         conn.commit()
         cur.close()
 
@@ -165,11 +166,11 @@ def submit():
         url = request.form.get('url')
 
         header = {
-            'authority':  environ["AUTHORITY"],
             'user-agent': environ["USER_AGENT"]
         }
 
         product_data = scrape_asos_page(url, header)
+        print(product_data)
 
         user_data = {
             'first_name': first_name,

@@ -7,7 +7,8 @@ CREATE TABLE products (
     product_id SERIAL PRIMARY KEY,
     product_name VARCHAR(255),
     product_url TEXT NOT NULL,
-    website_name VARCHAR(255) NOT NULL
+    website_name VARCHAR(255) NOT NULL,
+    image_url TEXT
 );
 
 CREATE TABLE prices (

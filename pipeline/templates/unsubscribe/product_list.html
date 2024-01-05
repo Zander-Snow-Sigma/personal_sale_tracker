@@ -4,100 +4,170 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sale Tracker</title>
+    <link href="https://fonts.googleapis.com/css2?family=Source+Sans+Pro:wght@300;400;600;700&display=swap" rel="stylesheet">
     <style>
-        body {
+        * {
             margin: 0;
             padding: 0;
+            box-sizing: border-box;
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
+
+        body, button {
+            font-family: 'Source Sans Pro', sans-serif;
+        }
+
+        body {
+            background-color: #f7f7f7;
+            color: #4a4a4a;
+            line-height: 1.7;
             display: flex;
             flex-direction: column;
             align-items: center;
-            font-family: Arial, sans-serif;
-            background-color: #d8eaeb;
+            height: 100vh;
+            margin: 0;
+            padding: 0;
         }
 
         h1 {
-            margin-top: 35px;
-            text-decoration: underline;
-            font-size: xx-large;
+            font-size: 3rem;
+            font-weight: 700;
+            color: #333;
+            margin: 1.5rem 0;
         }
 
         p {
             max-width: 600px;
             text-align: center;
-            margin: 35px 20px;
-            font-size: larger;
+            margin: 1rem 20px;
+            font-size: 1rem;
+            color: #555;
         }
 
-        .container {
-            text-align: center;
-            max-width: 2000px;
-            margin: 35px;
-            padding: 40px;
-            border: 1px solid #ddd;
-            border-radius: 5px;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-            background-color:  #91b1b3;
-        }
-        
-        button {
-            padding: 10px 15px;
-            border: none;
-            border-radius: 4px;
-            background-color: #5f7b7d;
-            color: white;
-            cursor: pointer;
-        }
-
-        button:hover {
-            background-color: #40959c;
-        }
         .buttons-container {
             display: flex;
             justify-content: center;
-            gap: 40px;
+            gap: 1rem;
+            margin-top: 3rem;
+        }
+
+        button {
+            padding: 1rem 1.5rem;
+            font-size: 1rem;
+            font-weight: 600;
+            border: 2px solid #007bff;
+            border-radius: 0.25rem;
+            background-color: transparent;
+            color: #007bff;
+            cursor: pointer;
+            min-width: 200px;
+            max-width: 200px;
+        }
+
+        button:hover, button:focus {
+            background-color: #007bff;
+            color: #ffffff;
+            border-color: #007bff;
+        }
+
+        table {
+            margin: 1rem;
+            border-collapse: collapse;
+            width: 100%;
+            max-width: 600px;
+        }
+
+        th, td {
+            text-align: left;
+            padding: 8px;
+        }
+
+        th {
+            background-color: #007bff;
+            color: white;
+        }
+
+        tr:nth-child(even) {
+            background-color: #f2f2f2;
+        }
+
+        .image {
+            max-width: 150px;
+            height: auto;
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            * {
+                transition: none;
+            }
+        }
+
+        @media (max-width: 600px) {
+            .buttons-container {
+                flex-direction: column;
+                gap: 1rem;
+            }
+
+            button {
+                margin-bottom: 1rem;
+                width: 100%; 
+            }
+
+            table {
+                width: 90%;
+            }
         }
     </style>
-</meta>
-</meta>
+</head>
 <body>
-    <h1>Subscriptions</h1>
-    <div>
-        <ul>
-        {% for name in names %}
-            <li>{{ name }}</li>
-        {% endfor %}
-        </ul>
-    </div>
-
+    <script>
+    function getUserEmail() {
+            var userEmail = document.getElementById('userEmail').value;
+            console.log(userEmail)
+            return userEmail
+        }
+        function deleteItem(element, productName) {
+            var userEmail = getUserEmail()
+            if (confirm("Are you sure you want to unsubscribe from receiving notifications for this product?")) {
+                var xhr_request = new XMLHttpRequest();
+                xhr_request.open("POST", "/delete_subscription", true);
+                xhr_request.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
+                xhr_request.onreadystatechange = function() {
+                    if (this.readyState == XMLHttpRequest.DONE && this.status == 200) {
+                        element.parentNode.parentNode.remove();
+                    }
+                }
+                xhr_request.send("product_name=" + encodeURIComponent(productName) + "&user_email=" + encodeURIComponent(userEmail));
+            }
+        }
+    </script>
     <div class="buttons-container">
-        <div class="button" id="unsubscribe_button">
-            <button
-            id="unsubscribe"
-            class="btn btn-warning"
-            onclick='window.location.href = "./unsubscribe"'
-            >
-            Unsubscribe 📔
-            </button>
-        </div>
-
-        <div class="button" id="add_product">
-            <button
-            id="add_product_button"
-            class="btn btn-warning"
-            onclick='window.location.href = "./submit"'
-            >
-            Add Product 🛒
-            </button>
-        </div>
-
-        <div class="button" id="homepage">
-            <button
-            id="return_to_homepage_button"
-            class="btn btn-warning"
-            onclick='window.location.href = "./"'
-            >
-            Return to homepage
-            </button>
-        </div>
+        <button id="return_to_homepage_button" onclick='window.location.href = "./"'>Homepage</button>
+        <button id="unsubscribe" onclick='window.location.href = "./subscriptions"'>View Subscriptions</button>
+        <button id="add_product_button" onclick='window.location.href = "./addproducts"'>Add Product</button>
     </div>
+    <h1>Subscriptions</h1>
+    <p>Welcome {{ firstname }}! Please see your subscriptions below.</p>
+    <input type="hidden" id="userEmail" value="{{ user_email }}">
+    <table>
+        <thead>
+            <tr>
+                <th>Action</th>
+                <th>Product Name</th>
+                <th>Image</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for item in names %}
+                <tr>
+                    <td>
+                        <button onclick="deleteItem(this, '{{ item.product_name }}')">Delete</button>
+                    </td>
+                    <td><a href="{{ item.product_url }}">{{ item.product_name }}</a></td>
+                    <td><img class="image" src="{{ item.image_url }}"/></td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
 </body>
+</html>

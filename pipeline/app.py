@@ -124,7 +124,7 @@ def get_products_from_email(conn: connection, email: str) -> list:
     """
     cur = conn.cursor(cursor_factory=extras.RealDictCursor)
 
-    query = """SELECT users.first_name, products.product_name,products.product_url, products.product_id, products.image_url
+    query = """SELECT users.first_name, products.product_name,products.product_url, products.product_id, products.image_url, products.product_availability
                 FROM users
                 JOIN subscriptions ON users.user_id = subscriptions.user_id
                 JOIN products ON subscriptions.product_id = products.product_id
@@ -219,6 +219,12 @@ def unsubscribe_index():
             return render_template('/unsubscribe/not_subscribed.html')
 
         user_products = get_products_from_email(conn, email)
+        print(user_products)
+        for user in user_products:
+            if user["product_availability"] == True:
+                user["available"] = "Yes"
+            else:
+                user["available"] = "No"
 
         user_first_name = [product["first_name"]
                            for product in user_products][0]

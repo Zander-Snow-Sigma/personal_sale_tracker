@@ -8,6 +8,7 @@ CREATE TABLE products (
     product_name VARCHAR(255),
     product_url TEXT NOT NULL,
     website_name VARCHAR(255) NOT NULL,
+    product_availability BOOLEAN,
     image_url TEXT
 );
 

@@ -241,10 +241,13 @@ resource "aws_ecs_task_definition" "c9-sale-tracker-price-alert-task-def" {
       {"name": "DB_NAME", "value": "${var.DB_NAME}"},
       {"name": "DB_PASSWORD", "value": "${var.DB_PASSWORD}"},
       {"name": "DB_PORT", "value": "${var.DB_PORT}"},
-      {"name": "DB_USER", "value": "${var.DB_USER}"}
+      {"name": "DB_USER", "value": "${var.DB_USER}"},
+      {"name": "SENDER_EMAIL_ADDRESS", "value": "${var.SENDER_EMAIL_ADDRESS}"},
+      {"name": "AWS_ACCESS_KEY_ID", "value": "${var.AWS_ACCESS_KEY}"},
+      {"name": "AWS_SECRET_ACCESS_KEY", "value": "${var.AWS_SECRET_ACCESS_KEY}"}
     ],
     "name": "c9-sale-tracker-price-alert",
-    "image": "",
+    "image": "129033205317.dkr.ecr.eu-west-2.amazonaws.com/c9-sale-tracker-price-alerts:latest",
     "essential": true
   }
 ]

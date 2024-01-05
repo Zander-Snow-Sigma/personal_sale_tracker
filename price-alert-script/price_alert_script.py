@@ -14,6 +14,8 @@ from psycopg2.extensions import connection
 logging.basicConfig(filename='price_alert_logs.log', level=logging.INFO,
                     format='%(asctime)s - %(levelname)s - %(message)s')
 
+EMAIL_SENDER = 'trainee.tayla.dawson@sigmalabs.co.uk'
+
 
 def get_database_connection() -> connection:
     """
@@ -180,10 +182,10 @@ def send_email(ses_client, sender, recipient, subject, body):
 
 def selectively_send_emails(ses_client, subscription_instances: list[list]):
     """
-    Selectively sending emails to users if price drops
+    Selectively sending emails to users if price drops.
     """
 
-    sender = 'trainee.tayla.dawson@sigmalabs.co.uk'
+    sender = EMAIL_SENDER
 
     for subscription in subscription_instances:
         if subscription['is_discounted'] == True:

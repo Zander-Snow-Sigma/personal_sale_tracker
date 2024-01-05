@@ -87,7 +87,7 @@ def insert_product_data(conn: connection, data_product: dict):
         cur.execute(query, (data_product.get('product_name', 'Unknown'),
                             data_product['product_url'],
                             data_product['image_URL'],
-                            data_product['product_availability'],
+                            data_product['is_in_stock'],
                             data_product['website_name']))
         conn.commit()
         cur.close()
@@ -222,7 +222,7 @@ def unsubscribe_index():
         user_products = get_products_from_email(conn, email)
         print(user_products)
         for user in user_products:
-            if user["product_availability"] == True:
+            if user["is_in_stock"] == True:
                 user["available"] = "Yes"
             else:
                 user["available"] = "No"

@@ -49,3 +49,9 @@ variable "USER_AGENT" {
   type        = string
   default = "value"
 }
+
+variable "SENDER_EMAIL_ADDRESS" {
+  description = "Value of sender email"
+  type        = string
+  default = "value"
+}

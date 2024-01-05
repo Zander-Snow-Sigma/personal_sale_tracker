@@ -9,6 +9,8 @@ from psycopg2.extensions import connection
 from datetime import datetime
 from decimal import Decimal
 from itertools import groupby
+import base64
+import requests
 
 from dotenv import load_dotenv
 import boto3
@@ -71,6 +73,29 @@ def compare_latest_two_prices(latest_price_entries: dict) -> bool:
         return False
 
 
+def get_discount_amount(latest_prices_list: list) -> dict:
+    """
+    Gets the old and new product price. 
+    Calculates the percentage discount. 
+    """
+    if len(latest_prices_list) > 1 and latest_prices_list[-1].get('price') and latest_prices_list[0].get('price'):
+        previous_price = latest_prices_list[-1].get('price')
+        new_price = latest_prices_list[0].get('price')
+
+        discount_value = previous_price - new_price
+        fractional_discount = discount_value/previous_price
+        percentage_discount = fractional_discount * 100
+
+        return {'previous_price': previous_price,
+                'new_price': new_price,
+                'percentage_discount': percentage_discount}
+
+    else:
+        return {'previous_price': 'Could not extract.',
+                'new_price': 'Could not extract.',
+                'percentage_discount': 'Unknown'}
+
+
 def get_user_emails(rds_conn: connection) -> list[dict]:
     """
     Query RDS for every instance of a subscription.
@@ -92,18 +117,31 @@ def get_user_emails(rds_conn: connection) -> list[dict]:
         user_email = [dict(row) for row in cur.fetchall()][0]['email']
 
         cur.execute(
-            "SELECT product_name FROM products WHERE product_id = (%s);", (product_id,))
-        product_name = [dict(row) for row in cur.fetchall()][0]['product_name']
+            "SELECT product_name, image_url FROM products WHERE product_id = (%s);", (product_id,))
+        response = [dict(row) for row in cur.fetchall()][0]
+        product_name = response['product_name']
+        image_url = response['image_url']
 
-        is_discounted = compare_latest_two_prices(
-            get_prices_of_latest_pair_of_products(rds_conn, product_id))
+        # finding discount status, initial, final, and percentage
+        latest_products = get_prices_of_latest_pair_of_products(
+            rds_conn, product_id)
+        is_discounted = compare_latest_two_prices(latest_products)
+        prices_and_discount_amount = get_discount_amount(latest_products)
+
+        previous_price = prices_and_discount_amount['previous_price']
+        new_price = prices_and_discount_amount['new_price']
+        percentage_discount = prices_and_discount_amount['percentage_discount']
 
         list_of_subscription_instances.append({
             'user_id': user_id,
             'user_email': user_email,
             'product_id': product_id,
             'product_name': product_name,
-            'is_discounted': is_discounted
+            'is_discounted': is_discounted,
+            'previous_price': previous_price,
+            'new_price': new_price,
+            'percentage_discount': percentage_discount,
+            'image_url': image_url
         })
 
     return list_of_subscription_instances
@@ -122,19 +160,17 @@ def create_ses_client():
     return ses_client
 
 
-def send_email(ses_client, sender, recipient, subject, body) -> None:
+def send_email(ses_client, sender, recipient, subject, body):
     """
     Sends an email with desired subject and body.
     """
-
-    # [TODO]: Use HTML instead of Data
 
     response = ses_client.send_email(
         Source=sender,
         Destination={'ToAddresses': [recipient]},
         Message={
             'Subject': {'Data': subject},
-            'Body': {'Text': {'Data': body}}
+            'Body': {'Html': {'Data': body}}
         }
     )
 
@@ -147,7 +183,6 @@ def selectively_send_emails(ses_client, subscription_instances: list[list]):
     """
 
     # [TODO]: Work out who the 'sender' should be.
-    # [TODO]: Include the value of the discount in a concise, computationally efficient way.
     # [TODO]: Make email prettier.
     # [TODO]: Add image of item
 
@@ -158,7 +193,23 @@ def selectively_send_emails(ses_client, subscription_instances: list[list]):
             recipient = 'trainee.tayla.dawson@sigmalabs.co.uk'
             # recipient = subscription['user_email']
             subject = "Your item has decreased in price!"
-            body = f"Item {subscription['product_name']} has decreased in price!"
+
+            body = f"""<meta charset="UTF-8">
+                            <center>
+                            <h1 font-family="Ariel">
+                            Your item {subscription['product_name']} has gone down 
+                            by {subscription['percentage_discount']:.1f}%
+                            </h1>
+                            <body class="New price" font-family="Ariel">
+                            <b>New price = £{subscription['new_price']:.2f}
+                            </body><br>
+                            </br>
+                            <body class="Previous price" font-family="Ariel">
+                            <b>Previous price = £{subscription['previous_price']:.2f}</b>
+                            </body><br></br>
+                            <img src="{subscription["image_url"]}" alt="img">
+                            </center>"""
+
             send_email(ses_client, sender, recipient, subject, body)
 
         else:
@@ -169,6 +220,8 @@ if __name__ == "__main__":
 
     load_dotenv()
     conn = get_database_connection()
+
+    print(get_prices_of_latest_pair_of_products(conn, 2))
 
     user_product_booleans = get_user_emails(conn)
     ses_client = create_ses_client()

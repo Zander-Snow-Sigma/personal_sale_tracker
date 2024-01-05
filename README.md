@@ -47,6 +47,9 @@ There are many emailing services throughout this project:
 3. Product no longer available
     - A user will receive an email via SES when a product they are subscribed to no longer exists. This means the product has been taken off the website entirely and the url is invalid.
 
+4. Product sold out. 
+    - A user will receive an email via SES when a product they are subscribe to is sold out. This means the product is still on the website and has a valid url not the product availability is none.
+
 
 #### Dashboard
 

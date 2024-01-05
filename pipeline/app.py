@@ -87,7 +87,7 @@ def insert_product_data(conn: connection, data_product: dict):
         cur.execute(query, (data_product.get('product_name', 'Unknown'),
                             data_product['product_url'],
                             data_product['image_URL'],
-                            data_product['product_availability'],
+                            data_product['is_in_stock'],
                             data_product['website_name']))
         conn.commit()
         cur.close()
@@ -170,7 +170,6 @@ def submit():
         }
 
         product_data = scrape_asos_page(url, header)
-        print(product_data)
 
         user_data = {
             'first_name': first_name,

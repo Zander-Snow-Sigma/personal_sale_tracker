@@ -88,10 +88,9 @@ def get_discount_amount(latest_prices_list: list) -> dict:
                 'new_price': new_price,
                 'percentage_discount': percentage_discount}
 
-    else:
-        return {'previous_price': 'Could not extract.',
-                'new_price': 'Could not extract.',
-                'percentage_discount': 'Unknown'}
+    return {'previous_price': 'Could not extract.',
+            'new_price': 'Could not extract.',
+            'percentage_discount': 'Unknown'}
 
 
 def get_user_emails(rds_conn: connection) -> list[dict]:
@@ -120,7 +119,6 @@ def get_user_emails(rds_conn: connection) -> list[dict]:
         product_name = response['product_name']
         image_url = response['image_url']
 
-        # finding discount status, initial, final, and percentage
         latest_products = get_prices_of_latest_pair_of_products(
             rds_conn, product_id)
         is_discounted = compare_latest_two_prices(latest_products)
@@ -182,17 +180,14 @@ def send_email(ses_client, sender, recipient, subject, body):
 
 def selectively_send_emails(ses_client, subscription_instances: list[list]):
     """
-    Selectively sending emails to users if price drops
+    Selectively sending emails to users if price drops.
     """
 
-    # [TODO]: Work out who the 'sender' should be.
-
-    sender = 'trainee.tayla.dawson@sigmalabs.co.uk'
+    sender = environ["SENDER_EMAIL_ADDRESS"]
 
     for subscription in subscription_instances:
         if subscription['is_discounted'] == True:
-            recipient = 'trainee.tayla.dawson@sigmalabs.co.uk'
-            # recipient = subscription['user_email']
+            recipient = subscription['user_email']
             subject = "Your item has decreased in price!"
 
             body = f"""<meta charset="UTF-8">
@@ -203,9 +198,9 @@ def selectively_send_emails(ses_client, subscription_instances: list[list]):
                             by {subscription['percentage_discount']:.1f}%
                             </h1>
                             <body class="New price" font-family="Ariel">
-                            <b>New price = £{subscription['new_price']:.2f}
-                            </body><br>
-                            </br>
+                            <b>
+                            New price = £{subscription['new_price']:.2f}
+                            </body><br></br>
                             <body class="Previous price" font-family="Ariel">
                             <b>Previous price = £{subscription['previous_price']:.2f}
                             </b>
@@ -216,7 +211,7 @@ def selectively_send_emails(ses_client, subscription_instances: list[list]):
             send_email(ses_client, sender, recipient, subject, body)
 
         else:
-            logging.info(f"Email not sent; no price change.")
+            logging.info("Email not sent; no price change.")
 
 
 if __name__ == "__main__":
@@ -225,5 +220,5 @@ if __name__ == "__main__":
     conn = get_database_connection()
 
     user_product_booleans = get_user_emails(conn)
-    ses_client = create_ses_client()
-    selectively_send_emails(ses_client, user_product_booleans)
+    client = create_ses_client()
+    selectively_send_emails(client, user_product_booleans)

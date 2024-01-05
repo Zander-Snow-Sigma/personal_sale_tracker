@@ -7,7 +7,7 @@ If URL invalid, unsubscribe user from produce and send user notification
 - update price extract to match abbeys
 - update email formatting to match taylas
 """
-
+import logging
 import json
 from os import environ
 
@@ -19,8 +19,26 @@ from psycopg2.extensions import connection
 from bs4 import BeautifulSoup
 from dotenv import load_dotenv
 
+logging.basicConfig(filename='price_alert_logs.log', level=logging.INFO,
+                    format='%(asctime)s - %(levelname)s - %(message)s')
+
 
 STARTER_ASOS_API = "https://www.asos.com/api/product/catalogue/v3/stockprice?"
+
+EMAIL_QUERY = """
+            SELECT users.email FROM users 
+            FULL OUTER JOIN subscriptions ON users.user_id = subscriptions.user_id 
+            WHERE subscriptions.product_id = %s
+            """
+INSERT_PRICE_QUERY = """
+            INSERT INTO prices (updated_at, product_id, price) 
+            VALUES %s
+            """
+UPDATE_AVAILABILITY_QUERY = """
+            UPDATE products 
+            SET product_availability = %s
+            WHERE product_id = %s
+            """
 
 def get_database_connection() -> connection:
     """
@@ -90,14 +108,36 @@ def scrape_asos_page(rds_conn:connection, product: dict, header: dict, ses_clien
     price = requests.get(price_endpoint, timeout=5).json()[
         0]["productPrice"]["current"]["value"]
 
+
+    sizes = requests.get(price_endpoint, timeout=5).json()[0]['variants']
+
     if price:
-        if product['product_availability'] == True:
+        product_data["price"] = price
+    else:
+        product_data["price"] = "Price not found"
+
+    availabilities = []
+    for size in sizes:
+        if size["isInStock"] == True:
+            availabilities.append(size["isInStock"])
+        else:
+            availabilities.append(size["isInStock"])
+
+    if True in availabilities:
+        product_data["is_in_stock"] = True
+    else:
+        product_data["is_in_stock"] = False
+
+
+
+        if product_data["is_in_stock"] == True:
             return price
         
         elif product['product_availability'] == False:
             update_product_availability(rds_conn, product, True)
             # Send email to notify user of updated subscription status
             send_stock_update_email(rds_conn, ses_client, product, True)
+            logging.info(f"Product {product['product_name']} back in stock. User Notified")
             return price
         
     else:
@@ -106,6 +146,7 @@ def scrape_asos_page(rds_conn:connection, product: dict, header: dict, ses_clien
             update_product_availability(rds_conn, product, False)
             # Send email to notify user of updated subscription status
             send_stock_update_email(rds_conn, ses_client, product, False)
+            logging.info(f"Product {product['product_name']} out of stock. User Notified")
             return 0
         
         elif product['product_availability'] == False:
@@ -118,12 +159,7 @@ def update_product_availability(rds_conn:connection, product, availability:bool)
     """
     
     with rds_conn.cursor(cursor_factory=extras.RealDictCursor) as cur:
-        cur.execute(
-            """
-            UPDATE products 
-            SET product_availability = %s
-            WHERE product_id = %s
-            """,(availability, product['product_id']))
+        cur.execute(UPDATE_AVAILABILITY_QUERY,(availability, product['product_id']))
         
     rds_conn.commit()    
     pass
@@ -135,11 +171,7 @@ def insert_price_data(rds_conn: connection, product_data:dict):
     """
     
     with rds_conn.cursor(cursor_factory=extras.RealDictCursor) as cur:
-        extras.execute_values(cur,
-            """
-            INSERT INTO prices (updated_at, product_id, price) 
-            VALUES %s""",
-            product_data)
+        extras.execute_values(cur, INSERT_PRICE_QUERY, product_data)
         
     rds_conn.commit()    
 
@@ -148,61 +180,63 @@ def get_user_emails(rds_conn:connection, product_id:int):
     """
     Query database for users which are subscribed to given product
     """
-
     cur = rds_conn.cursor(cursor_factory=extras.RealDictCursor)
-
-    cur.execute("""
-                SELECT users.email FROM users 
-                FULL OUTER JOIN subscriptions ON users.user_id = subscriptions.user_id 
-                WHERE subscriptions.product_id = %s
-                """,(product_id,))
+    cur.execute(EMAIL_QUERY, (product_id,))
     rows = cur.fetchall()
     cur.close()
     
-    matching_emails = []
-    for entry in rows:
-        matching_emails.append(entry['email'])
-    
-    return matching_emails
+    return [entry['email'] for entry in rows]
 
 
 def send_stock_update_email(rds_conn:connection, ses_client:boto3.client, product_data:dict, availability:bool):
     """
     Set sender, recipient and condition for email
     """
-
-    sender = 'trainee.harvind.grewal@sigmalabs.co.uk'
-    recipients = get_user_emails(rds_conn, product_data['product_id'])
+    sender = environ['SENDER']
+    recipients = environ['SENDER']
+    # recipients = get_user_emails(rds_conn, product_data['product_id'])
     
     if availability:
-        for recipient in recipients:
-            response = ses_client.send_email(
-                Source=sender,
-                Destination={'ToAddresses': [recipient]},
-                Message={
-                    'Subject': {'Data': "Update of product availability"},
-                    'Body': {'Text': {'Data': f"""
-                                    The product ({product_data['product_name']}) you have been tracking is now back in stock! 
-                                    ({product_data['product_url']}).
-                                    """}}
-                }
-            )
-        print(f"Email sent! Message ID: {response['MessageId']}")
+        
+        response = ses_client.send_email(
+            Source=sender,
+            Destination={'ToAddresses': [recipients]},
+            Message={
+                'Subject': {'Data': "Update of product availability"},
+                'Body': {'Html': {'Data':f"""<meta charset="UTF-8">
+                            <center>
+                            <h1 font-family="Ariel">
+                            Your item <a href={product['product_url']}>
+                            {product['product_name']}</a> is now back in stock!
+                            </h1>
+                            <br></br>
+                            <img src="{product["image_url"]}" alt="img">
+                            </center>"""
+                }}
+            }
+        )
+        
 
     else:
-        for recipient in recipients:
-            response = ses_client.send_email(
-                Source=sender,
-                Destination={'ToAddresses': [recipient]},
-                Message={
-                    'Subject': {'Data': "Update of product availability"},
-                    'Body': {'Text': {'Data': f"""
-                                    The product ({product_data['product_name']}) you have been tracking is out of stock! 
-                                    ({product_data['product_url']}). Please visit our website to change subscription preferences
-                                    """}}
-                }
-            )
-        print(f"Email sent! Message ID: {response['MessageId']}")
+        
+        response = ses_client.send_email(
+            Source=sender,
+            Destination={'ToAddresses': [recipients]},
+            Message={
+                'Subject': {'Data': "Update of product availability"},
+                'Body': {'Html': {'Data':f"""<meta charset="UTF-8">
+                            <center>
+                            <h1 font-family="Ariel">
+                            Your item <a href={product['product_url']}>
+                            {product['product_name']}</a> is out of stock!
+                            </h1>
+                            <br></br>
+                            <img src="{product["image_url"]}" alt="img">
+                            </center>"""
+                }}
+            }
+        )
+        
 
 
 if __name__ == "__main__":

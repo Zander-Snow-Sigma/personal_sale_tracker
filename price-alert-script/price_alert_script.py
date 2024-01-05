@@ -1,19 +1,15 @@
 """
-Script which compares latest product prices with prior entires and notifies user if price drops.
+Script which compares latest product prices with prior entires 
+and notifies user if price drops.
 """
 import logging
 from os import environ
-from urllib.parse import urlparse
-from psycopg2 import connect, extras
-from psycopg2.extensions import connection
 from datetime import datetime
-from decimal import Decimal
-from itertools import groupby
-import base64
-import requests
 
 from dotenv import load_dotenv
 import boto3
+from psycopg2 import connect, extras
+from psycopg2.extensions import connection
 
 logging.basicConfig(filename='price_alert_logs.log', level=logging.INFO,
                     format='%(asctime)s - %(levelname)s - %(message)s')
@@ -78,7 +74,9 @@ def get_discount_amount(latest_prices_list: list) -> dict:
     Gets the old and new product price. 
     Calculates the percentage discount. 
     """
-    if len(latest_prices_list) > 1 and latest_prices_list[-1].get('price') and latest_prices_list[0].get('price'):
+    if len(latest_prices_list) > 1 and latest_prices_list[-1].get(
+            'price') and latest_prices_list[0].get('price'):
+
         previous_price = latest_prices_list[-1].get('price')
         new_price = latest_prices_list[0].get('price')
 
@@ -132,6 +130,10 @@ def get_user_emails(rds_conn: connection) -> list[dict]:
         new_price = prices_and_discount_amount['new_price']
         percentage_discount = prices_and_discount_amount['percentage_discount']
 
+        cur.execute(
+            "SELECT product_url FROM products WHERE product_id = (%s);", (product_id,))
+        product_url = [dict(row) for row in cur.fetchall()][0]['product_url']
+
         list_of_subscription_instances.append({
             'user_id': user_id,
             'user_email': user_email,
@@ -141,7 +143,8 @@ def get_user_emails(rds_conn: connection) -> list[dict]:
             'previous_price': previous_price,
             'new_price': new_price,
             'percentage_discount': percentage_discount,
-            'image_url': image_url
+            'image_url': image_url,
+            'product_url': product_url
         })
 
     return list_of_subscription_instances
@@ -183,8 +186,6 @@ def selectively_send_emails(ses_client, subscription_instances: list[list]):
     """
 
     # [TODO]: Work out who the 'sender' should be.
-    # [TODO]: Make email prettier.
-    # [TODO]: Add image of item
 
     sender = 'trainee.tayla.dawson@sigmalabs.co.uk'
 
@@ -197,7 +198,8 @@ def selectively_send_emails(ses_client, subscription_instances: list[list]):
             body = f"""<meta charset="UTF-8">
                             <center>
                             <h1 font-family="Ariel">
-                            Your item {subscription['product_name']} has gone down 
+                            Your item <a href={subscription['product_url']}>
+                            {subscription['product_name']}</a> has gone down 
                             by {subscription['percentage_discount']:.1f}%
                             </h1>
                             <body class="New price" font-family="Ariel">
@@ -205,7 +207,8 @@ def selectively_send_emails(ses_client, subscription_instances: list[list]):
                             </body><br>
                             </br>
                             <body class="Previous price" font-family="Ariel">
-                            <b>Previous price = £{subscription['previous_price']:.2f}</b>
+                            <b>Previous price = £{subscription['previous_price']:.2f}
+                            </b>
                             </body><br></br>
                             <img src="{subscription["image_url"]}" alt="img">
                             </center>"""
@@ -220,8 +223,6 @@ if __name__ == "__main__":
 
     load_dotenv()
     conn = get_database_connection()
-
-    print(get_prices_of_latest_pair_of_products(conn, 2))
 
     user_product_booleans = get_user_emails(conn)
     ses_client = create_ses_client()

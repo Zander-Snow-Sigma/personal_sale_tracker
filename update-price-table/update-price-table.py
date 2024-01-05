@@ -1,23 +1,24 @@
 """
 Script which scrapes webpages and inserts updated price data into prices table in RDS
 Triggered every three minutes
+If URL invalid, unsubscribe user from produce and send user notification
 
-To Do:
-- Remove product from database when url becomes invalid
-- Move verify email code to API script
+[ToDo] - Set email sender and Set Email HTML formatting
+- update price extract to match abbeys
+- update email formatting to match taylas
 """
 
 import json
 from os import environ
-from urllib.parse import urlparse
-from psycopg2 import connect, extras
-from psycopg2.extensions import connection
 
-from datetime import datetime
-from bs4 import BeautifulSoup
-from dotenv import load_dotenv
 import requests
 import boto3
+from datetime import datetime
+from psycopg2 import connect, extras
+from psycopg2.extensions import connection
+from bs4 import BeautifulSoup
+from dotenv import load_dotenv
+
 
 STARTER_ASOS_API = "https://www.asos.com/api/product/catalogue/v3/stockprice?"
 
@@ -37,7 +38,7 @@ def get_database_connection() -> connection:
         return error
 
 
-def create_ses_client():
+def create_ses_client()->boto3.client:
     """
     Create and return a Boto3 client for AWS SES using AWS credentials.
     """
@@ -50,7 +51,7 @@ def create_ses_client():
     return ses_client
 
 
-def get_all_product_data(rds_conn:connection):
+def get_all_product_data(rds_conn:connection)->extras.RealDictRow:
     """
     Query database for data on all products that price data is required for
     """
@@ -63,6 +64,84 @@ def get_all_product_data(rds_conn:connection):
     cur.close()
   
     return rows
+
+### Update to match Abbeys extract function
+def scrape_asos_page(rds_conn:connection, product: dict, header: dict, ses_client:boto3.client) -> float:
+    """
+    Scrapes an ASOS page and returns the price of selected product.
+    If price not found, remove product from tracking and notify user
+    """
+    page = requests.get(product["product_url"], headers=header, timeout=5)
+    soup = BeautifulSoup(page.text, "html.parser").find(
+        "script", type="application/ld+json")
+
+
+    product_data = json.loads(soup.string)
+    
+    if "productID" in product_data.keys():
+        price_endpoint = f"""{STARTER_ASOS_API}productIds={
+            product_data['productID']
+            }&store=COM&currency=GBP"""
+    else:
+        price_endpoint = f"""{STARTER_ASOS_API}productIds={
+            product_data['@graph'][0]['productID']
+            }&store=COM&currency=GBP"""
+
+    price = requests.get(price_endpoint, timeout=5).json()[
+        0]["productPrice"]["current"]["value"]
+
+    if price:
+        if product['product_availability'] == True:
+            return price
+        
+        elif product['product_availability'] == False:
+            update_product_availability(rds_conn, product, True)
+            # Send email to notify user of updated subscription status
+            send_stock_update_email(rds_conn, ses_client, product, True)
+            return price
+        
+    else:
+
+        if product['product_availability'] == True:
+            update_product_availability(rds_conn, product, False)
+            # Send email to notify user of updated subscription status
+            send_stock_update_email(rds_conn, ses_client, product, False)
+            return 0
+        
+        elif product['product_availability'] == False:
+            return 0
+
+
+def update_product_availability(rds_conn:connection, product, availability:bool):
+    """
+    Update product table to reflect availability of item as shown on webpage
+    """
+    
+    with rds_conn.cursor(cursor_factory=extras.RealDictCursor) as cur:
+        cur.execute(
+            """
+            UPDATE products 
+            SET product_availability = %s
+            WHERE product_id = %s
+            """,(availability, product['product_id']))
+        
+    rds_conn.commit()    
+    pass
+
+
+def insert_price_data(rds_conn: connection, product_data:dict):
+    """
+    Insert product_id, current product price and timestamp into prices table in database
+    """
+    
+    with rds_conn.cursor(cursor_factory=extras.RealDictCursor) as cur:
+        extras.execute_values(cur,
+            """
+            INSERT INTO prices (updated_at, product_id, price) 
+            VALUES %s""",
+            product_data)
+        
+    rds_conn.commit()    
 
 
 def get_user_emails(rds_conn:connection, product_id:int):
@@ -87,129 +166,69 @@ def get_user_emails(rds_conn:connection, product_id:int):
     return matching_emails
 
 
-def send_unsubscription_emails(rds_conn:connection, ses_client:boto3.client, product_data):
+def send_stock_update_email(rds_conn:connection, ses_client:boto3.client, product_data:dict, availability:bool):
     """
     Set sender, recipient and condition for email
     """
 
     sender = 'trainee.harvind.grewal@sigmalabs.co.uk'
     recipients = get_user_emails(rds_conn, product_data['product_id'])
-
-    ## Include email verification upon email entry on webpage ##
-    for recipient in recipients:
-        response = ses_client.verify_email_identity(
-            EmailAddress=recipient
-        )
-    ## Include email verification upon email entry on webpage ##
-        
-    for recipient in recipients:
-        response = ses_client.send_email(
-            Source=sender,
-            Destination={'ToAddresses': [recipient]},
-            Message={
-                'Subject': {'Data': "Notification of product removed from tracking"},
-                'Body': {'Text': {'Data': f"""
-                                The product ({product_data['product_name']}) you have been tracking is no longer accessible by our system via the link provided 
-                                ({product_data['product_url']}). Please visit our website to re-subscribe a product
-                                """}}
-            }
-        )
-
-    print(f"Email sent! Message ID: {response['MessageId']}")
-
-
-
-def scrape_asos_page(rds_conn:connection, product: dict, header: dict, ses_client:boto3.client) -> dict:
-    """
-    Scrapes an ASOS page and returns a dict of desired data about the product.
-    """
-    page = requests.get(product["product_url"], headers=header, timeout=5)
-    soup = BeautifulSoup(page.text, "html.parser").find(
-        "script", type="application/ld+json")
-    try:
-        product_data = json.loads(soup.string)
-
-        product_price = 0
-        
-        if "productID" in product_data.keys():
-            price_endpoint = f"""{STARTER_ASOS_API}productIds={
-                product_data['productID']
-                }&store=COM&currency=GBP"""
-        else:
-            price_endpoint = f"""{STARTER_ASOS_API}productIds={
-                product_data['@graph'][0]['productID']
-                }&store=COM&currency=GBP"""
-
-        price = requests.get(price_endpoint, timeout=5).json()[
-            0]["productPrice"]["current"]["value"]
-
-        if price:
-            product_price = price
-        else:
-            product_price = "Price not found"
-
-        return product_price
-
-    except:
-        # Remove product from table
-        remove_invalid_product_from_database(rds_conn, product)
-        # Send email to notify user
-        send_unsubscription_emails(rds_conn, ses_client, product)
-        
-
-# def remove_invalid_product_from_database(rds_conn:connection, product:dict):
-#     """
-#     Remove product from product table when url is no longer accessible
-#     """
-#     curr = connection.cursor(cursor_factory=extras.RealDictCursor)
-#     curr.execute(
-#         "DELETE FROM product WHERE product_id = %s", (product['product_id'],))
-#     connection.commit()
-#     curr.close()
     
+    if availability:
+        for recipient in recipients:
+            response = ses_client.send_email(
+                Source=sender,
+                Destination={'ToAddresses': [recipient]},
+                Message={
+                    'Subject': {'Data': "Update of product availability"},
+                    'Body': {'Text': {'Data': f"""
+                                    The product ({product_data['product_name']}) you have been tracking is now back in stock! 
+                                    ({product_data['product_url']}).
+                                    """}}
+                }
+            )
+        print(f"Email sent! Message ID: {response['MessageId']}")
 
+    else:
+        for recipient in recipients:
+            response = ses_client.send_email(
+                Source=sender,
+                Destination={'ToAddresses': [recipient]},
+                Message={
+                    'Subject': {'Data': "Update of product availability"},
+                    'Body': {'Text': {'Data': f"""
+                                    The product ({product_data['product_name']}) you have been tracking is out of stock! 
+                                    ({product_data['product_url']}). Please visit our website to change subscription preferences
+                                    """}}
+                }
+            )
+        print(f"Email sent! Message ID: {response['MessageId']}")
 
-def insert_price_data(rds_conn: connection, product_data:dict):
-    """
-    Insert product_id, current product price and timestamp into prices table in database
-    """
-    
-    with rds_conn.cursor(cursor_factory=extras.RealDictCursor) as cur:
-        extras.execute_values(cur,
-            """
-            INSERT INTO prices (updated_at, product_id, price) 
-            VALUES %s""",
-            product_data)
-        
-    rds_conn.commit()
-    
 
 if __name__ == "__main__":
 
     load_dotenv()
+
     conn = get_database_connection()
     ses_client = create_ses_client()
 
     current_datetime = datetime.now()
+
     headers = {
         'authority':  environ["AUTHORITY"],
         'user-agent': environ["USER_AGENT"]
     }
-
     
     products = get_all_product_data(conn)
     product_price_data = []
 
     for product in products:
-        
-        product_price_data.append((current_datetime, product["product_id"], scrape_asos_page(conn, product, headers, ses_client)))
-    
-    print(product_price_data)
+        product_price = scrape_asos_page(conn, product, headers, ses_client)
+        if product_price != 0:
+            product_price_data.append((current_datetime, product["product_id"], product_price))
 
     insert_price_data(conn, product_price_data)
 
-    
-    # print(get_user_emails(conn,1))
 
 
    

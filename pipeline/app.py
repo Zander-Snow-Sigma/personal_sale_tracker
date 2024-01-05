@@ -222,7 +222,7 @@ def unsubscribe_index():
         user_products = get_products_from_email(conn, email)
         print(user_products)
         for user in user_products:
-            if user["is_in_stock"] == True:
+            if user["product_availability"] == True:
                 user["available"] = "Yes"
             else:
                 user["available"] = "No"

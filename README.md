@@ -4,6 +4,15 @@ Welcome to the Sales Tracker Repository!
 
 Ever lost out on buying a product because you wanted to wait until it was on sale, and then the product sold out before you had a chance to buy it? Well with this repo that problem can disappear! All you have to do is subscribe to a product you want to track and be prepared to check your emails for when it goes on sale! It's as simple as that. 
 
+### Installation Tips
+
+- It is recommended before stating any installations that you make a new virtual environment. 
+  - To make a new virtual environment, **Please go to the folder you want to create a virtual environment in**:
+    - `python3 -m venv venv`
+    - `source ./venv/bin/activate`
+
+- A new environment will be required for each folder in this repository.
+
 ## Cloud Architecture
 A high level overview of the cloud architecture can be seen below:
 
@@ -18,27 +27,30 @@ This pipeline acts as more of a web scraper that extracts data from an api and d
 #### Storage
 There are 2 options for storage:
 
-1. Short Term storage 
-  - This is a PostgreSQL server with an RDS database. 
+1. Short Term storage:
+    - This is a PostgreSQL server with an RDS database. 
 
-2. Long Term storage 
-  - This will be an S3 bucket containing csv files from each day. The csv files contain all of the data from the previous days RDS database and then resets the database ready for the current day. This will be triggered by an EventBridge. The triggered will is an ECS task that reads from the RDS and uploads the content to a csv file within an S3 bucket. 
+2. Long Term storage:
+    - This will be an S3 bucket containing csv files from each day. The csv files contain all of the data from the previous days RDS database and then resets the database ready for the current day. This will be triggered by an EventBridge. The triggered will is an ECS task that reads from the RDS and uploads the content to a csv file within an S3 bucket. 
 
 
 #### Emailing Service
 
 There are many emailing services throughout this project:
 
-1. New User Sign up - A user will receive an email via SES when they are initially added to the product system asking them to verify their identity. Only after the user verifies their identity will they be able to receive the following emails. 
+1. New User Sign up 
+    - A user will receive an email via SES when they are initially added to the product system asking them to verify their identity. Only after the user verifies their identity will they be able to receive the following emails. 
 
-2. Price drop email - A user will receive an email via SES when a product they are subscribed to has dropped in price (i.e. gone on sale). The user will receive this email within 3 minutes of the price dropping in order to maximize the chances of successful user purchase. 
+2. Price drop email 
+    - A user will receive an email via SES when a product they are subscribed to has dropped in price (i.e. gone on sale). The user will receive this email within 3 minutes of the price dropping in order to maximize the chances of successful user purchase. 
 
-[TO-DO]: Add in any more emails that are going to be made!
+3. Product no longer available
+    - A user will receive an email via SES when a product they are subscribed to no longer exists. This means the product has been taken off the website entirely and the url is invalid.
 
 
 #### Dashboard
 
-[TO-DO]: Write summary for dashboard. 
+For this project, a dashboard is provided using Streamlit. The dashboard here is run as a service within an ECS cluster. The dashboard will read from the RDS so that it can obtain real-time data and it will also read from an S3 bucket to obtain historical data as well.
 
 
 ## Entity Relationship Diagram (ERD)
@@ -69,6 +81,11 @@ This table will be continuously updated and will contain the price of each produ
 This table stores the different websites to be tracked. This allows users to easily see the different websites they can use to track products.
 
 ## Files explained
+Within each folder, there is a README that explains specifically its role. But to give a high level overview:
 
-[TO-DO]: Write out what all the files do.
-
+- `dashboard` - contains code related to the dashboarding service.
+- `diagrams` - contains all of the diagrams required for all README files.
+- `pipeline` - contains the code that extracts information from various websites / APIs and the uploads it to an RDS.
+- `price-alert-script` - contains code related to sending a user an email depending on when if a price has dropped.
+- `terraform` - contains terraform files that setup most of the cloud infrastructure needed.
+- `update-price-table` - contains pipeline code for updating the prices table in the RDS.

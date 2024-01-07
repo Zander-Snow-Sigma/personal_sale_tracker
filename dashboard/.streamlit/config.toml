@@ -4,3 +4,6 @@ backgroundColor="#f7f7f7"
 secondaryBackgroundColor="#E3F2FD"
 textColor="#4a4a4a"
 font="sans serif"
+
+[global]
+showWarningOnDirectExecution = false

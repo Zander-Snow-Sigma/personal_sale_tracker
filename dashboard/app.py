@@ -3,6 +3,7 @@ Streamlit app that runs the Dashboard.
 """
 import webbrowser
 
+import bcrypt
 from dotenv import load_dotenv
 import extra_streamlit_components as stx
 from extra_streamlit_components.CookieManager import CookieManager
@@ -20,7 +21,7 @@ def authenticate_user(users: list[dict], email: str, password: str) -> dict | No
     from the RDS if the details entered match, otherwise returns None.
     """
     for user in users:
-        if email == user["email"] and password == user["password"]:
+        if email == user["email"] and bcrypt.checkpw(password.encode('utf-8'), user["password"]):
             return user
     return None
 

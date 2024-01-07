@@ -3,6 +3,7 @@ Establishes a connection to the database.
 """
 from os import environ
 
+import bcrypt
 import pandas as pd
 from pandas import DataFrame
 from dotenv import load_dotenv
@@ -58,27 +59,35 @@ def load_all_database_info(db_conn: connection) -> DataFrame:
         return pd.DataFrame(result).rename(columns=COLUMNS)
 
 
+def hash_password(password):
+    return bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt())
+
+
 def get_user_info(conn: connection) -> list[dict]:
     """
     Gets all of the information from the users table in the RDS,
     adds a password and account type to each user 
     and returns a list of all users.
     """
+
+    admin = {"user_id": 0,
+             "email": "admin@saletracker.co.uk",
+             "type": "admin",
+             "first_name": "Admin",
+             "last_name": "Admin"}
+
+    admin["password"] = hash_password("adminPassword")
     all_users = [
-        {"user_id": 0,
-         "email": "admin@saletracker.co.uk",
-         "password": "adminPassword",
-         "type": "admin",
-         "first_name": "Admin",
-         "last_name": "Admin"},
     ]
+    all_users.append(admin)
     cur = conn.cursor(cursor_factory=RealDictCursor)
 
     cur.execute("SELECT * FROM users;")
     users = cur.fetchall()
 
     for user in users:
-        user["password"] = 'userPassword'
+
+        user["password"] = hash_password('userPassword')
         user["type"] = 'user'
         all_users.append(user)
 

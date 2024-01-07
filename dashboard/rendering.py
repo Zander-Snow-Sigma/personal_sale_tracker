@@ -14,8 +14,8 @@ def render_login_page() -> tuple:
         </h1>
         <h2><center>Please Login</center></h2>
         """, unsafe_allow_html=True)
-    email = st.text_input("Email")
-    password = st.text_input("Password", type="password")
+    email = st.text_input("Email", key="email_input")
+    password = st.text_input("Password", type="password", key="password_input")
     return email, password
 
 
@@ -83,6 +83,11 @@ def render_user_dashboard(df: DataFrame) -> None:
     see information relevant to them.
     """
     user_specific_df = df[df['User ID'] == st.session_state['user_id']]
+    st.markdown("""
+        <h1>
+            <center><span style='color: #007bff;'>Sale</span>Tracker Dashboard</center>
+        </h1>
+        """, unsafe_allow_html=True)
     st.write(f"Welcome, {st.session_state['user_email']}! You're logged in.")
     render_product_image_viewer(user_specific_df)
     display_user_specific_data(user_specific_df)

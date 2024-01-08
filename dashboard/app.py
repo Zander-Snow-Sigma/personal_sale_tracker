@@ -1,6 +1,7 @@
 """
 Streamlit app that runs the Dashboard.
 """
+import logging
 import webbrowser
 
 import bcrypt
@@ -56,12 +57,15 @@ def logout_of_dashboard(cookie_manager: CookieManager) -> None:
     st.rerun()
 
 
-def main():
+def main_display():
     """
     Main function script to run the entire streamlit app.
     """
     load_dotenv()
+    logging.info("loaded env variables")
     cookie_manager = stx.CookieManager()
+
+    logging.info("Loaded cookie manager")
 
     users = get_user_info(get_database_connection())
 
@@ -91,4 +95,4 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    main_display()

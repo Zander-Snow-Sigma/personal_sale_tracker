@@ -5,3 +5,5 @@ bcrypt
 extra_streamlit_components
 python-dotenv
 psycopg2-binary
+pytest
+pytest-cov

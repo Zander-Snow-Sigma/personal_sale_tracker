@@ -59,6 +59,7 @@ def render_product_image_viewer(df: DataFrame) -> None:
     selected_product_name = st.sidebar.selectbox(
         'Select a Product', df['Product Name'].unique())
     filtered_df = df[df['Product Name'] == selected_product_name]
+
     if not filtered_df.empty:
 
         image_url = filtered_df['Image URL'].iloc[0]

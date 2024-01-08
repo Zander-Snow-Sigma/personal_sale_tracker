@@ -1,5 +1,7 @@
 streamlit
 pandas
 altair
-ipynb-kernel
 bcrypt
+extra_streamlit_components
+python-dotenv
+psycopg2-binary

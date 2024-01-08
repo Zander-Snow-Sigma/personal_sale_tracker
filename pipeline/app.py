@@ -102,11 +102,11 @@ def insert_subscription_data(conn: connection, user_email: str, product_url: str
 
     user_query = "SELECT user_id FROM users WHERE email = (%s);"
     cur.execute(user_query, (user_email,))
-    user_id = cur.fetchone()['user_id']
+    user_id = cur.fetchone().get('user_id')
 
     product_query = "SELECT product_id FROM products WHERE product_url = (%s);"
     cur.execute(product_query, (product_url,))
-    product_id = cur.fetchone()['product_id']
+    product_id = cur.fetchone().get('product_id')
 
     check_query = "SELECT * FROM subscriptions WHERE user_id = (%s) AND product_id = (%s);"
     cur.execute(check_query, (user_id, product_id))
@@ -219,7 +219,7 @@ def unsubscribe_index():
             return render_template('/unsubscribe/not_subscribed.html')
 
         user_products = get_products_from_email(conn, email)
-        print(user_products)
+
         for user in user_products:
             if user["product_availability"] == True:
                 user["available"] = "In Stock"

@@ -222,9 +222,9 @@ def unsubscribe_index():
         print(user_products)
         for user in user_products:
             if user["product_availability"] == True:
-                user["available"] = "Yes"
+                user["available"] = "In Stock"
             else:
-                user["available"] = "No"
+                user["available"] = "Out of Stock"
 
         user_first_name = [product["first_name"]
                            for product in user_products][0]

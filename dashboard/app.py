@@ -89,7 +89,7 @@ def main_display():
         render_dashboard(df, users)
 
         if st.sidebar.button("SaleTracker Website"):
-            webbrowser.open_new_tab("http://18.130.21.247:5000/")
+            webbrowser.open_new_tab("http://3.8.84.3:5000/")
         if st.sidebar.button("Logout"):
             logout_of_dashboard(cookie_manager)
 

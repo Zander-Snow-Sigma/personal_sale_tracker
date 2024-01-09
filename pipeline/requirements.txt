@@ -7,4 +7,3 @@ psycopg2-binary
 flask
 boto3
 pytest-cov
-mypy_boto3_ses

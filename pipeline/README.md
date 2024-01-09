@@ -8,7 +8,8 @@ The files in this folder are used scrape information from various websites, extr
 - It is recommended before stating any installations that you make a new virtual environment. 
 - A new environment will be required for each folder in this repository.
 
-- Install all requirements for this folder: `pip3 install -r requirements.txt`.
+- Install all requirements for this folder: `pip3 install -r requirements.txt`
+- Install type hints for boto3: `python -m pip install 'boto3-stubs[ses]'`
 
 - Create a `.env` file with `touch .env`
 

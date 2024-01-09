@@ -3,12 +3,11 @@ Script to test the dashboard app.
 """
 import pytest
 import bcrypt
-from unittest.mock import patch, MagicMock, Mock
+from unittest.mock import patch, MagicMock
 import pandas as pd
 
 from app import authenticate_user, handle_login, logout_of_dashboard
 from database import get_database_connection, load_all_database_info, get_user_info
-from rendering import render_dashboard, render_login_page
 
 
 @pytest.fixture
@@ -22,8 +21,6 @@ def users():
         {'email': 'person2@email.com',
             'password': bcrypt.hashpw('password2'.encode('utf-8'), bcrypt.gensalt())}
     ]
-
-############ app.py ############
 
 
 def test_authenticate_correct_password(users):
@@ -84,8 +81,6 @@ def test_handle_logout(mock_session_state):
 
     assert mock_session_state.__setitem__.call_count == 3
 
-############ database.py ############
-
 
 @patch.dict("os.environ", {
     "DB_USER": "test_user",
@@ -96,7 +91,7 @@ def test_handle_logout(mock_session_state):
 @patch("database.connect")
 def test_get_database_connection_successful(mock_connect):
     """
-    Testing connection to database
+    Testing connection to database.
     """
     expected_connection = MagicMock()
     mock_connect.return_value = expected_connection
@@ -114,7 +109,7 @@ def test_get_database_connection_successful(mock_connect):
 @patch("database.connect", side_effect=ConnectionError("Connection error"))
 def test_get_database_connection_connection_error(mock_connect):
     """
-    Testing failed connection to database
+    Testing failed connection to database.
     """
     result = get_database_connection()
 
@@ -124,7 +119,7 @@ def test_get_database_connection_connection_error(mock_connect):
 @patch("database.connect")
 def test_load_all_database_info(mock_connect):
     """
-    Test that checks data is returned in the format of COLUMNS as specified in the SELECT_ALL_QUERY
+    Test that checks data is returned in the format of COLUMNS as specified in the SELECT_ALL_QUERY.
     """
     mock_connection = MagicMock()
     mock_cursor = mock_connection.cursor.return_value.__enter__.return_value
@@ -155,7 +150,7 @@ def test_load_all_database_info(mock_connect):
 @patch("database.hash_password")
 def test_get_user_info(mock_hash_password, mock_connection):
     """
-
+    Test that all user information is retrieved from database and admin login details are created.
     """
     mock_conn = MagicMock()
     mock_cursor = mock_conn.cursor.return_value
@@ -172,7 +167,7 @@ def test_get_user_info(mock_hash_password, mock_connection):
     result = get_user_info(mock_conn)
 
     assert isinstance(result, list)
-    assert len(result) == 3  # One admin user and two regular users
+    assert len(result) == 3
 
     # Admin user
     assert result[0] == {

@@ -39,7 +39,7 @@ def get_most_recent_price(most_recent: DataFrame) -> Series:
     """
     sorted_product_df = most_recent.sort_values(
         by='Updated At', ascending=False)
-    print(type(sorted_product_df.iloc[0]))
+
     return sorted_product_df.iloc[0]
 
 
@@ -84,7 +84,8 @@ def render_sidebar(df: DataFrame) -> None:
         st.sidebar.write(f'Lowest Price: £{round(lowest_price["Price"], 2)}')
 
         # Changes the Product Availability from True/False to In Stock/Out of Stock.
-        if most_recent_price["Product Availability"] is True:
+        print(most_recent_price["Product Availability"])
+        if most_recent_price["Product Availability"] == True:
             st.sidebar.write(
                 'Availability: In Stock')
         else:
@@ -92,8 +93,8 @@ def render_sidebar(df: DataFrame) -> None:
                 'Availability: Out of Stock')
 
         # Button that links to the products URL.
-        if st.sidebar.button("Go to Product"):
-            webbrowser.open_new_tab(most_recent_price["Product URL"])
+        st.sidebar.link_button(
+            "Product Page", most_recent_price["Product URL"])
 
     else:
         st.sidebar.write("No image available for the selected product.")

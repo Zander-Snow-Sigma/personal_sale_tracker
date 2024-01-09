@@ -1,24 +1,23 @@
 """
-Script which scrapes webpages and inserts updated price data into prices table in RDS
-Triggered every three minutes
-If URL invalid, unsubscribe user from produce and send user notification
+Script which scrapes webpages and inserts updated price data into prices table in RDS.
+Users are updated if their product has gone down in price, or if its stock status
+has changed. 
+Triggered every three minutes.
 """
-
-# [TODO]: Handle initial entries into prices table
-# [TODO]: Go through ALL subscriptions in the table
 
 import logging
 import json
 from os import environ
-import time
-
 from datetime import datetime
+
+import concurrent.futures
 import requests
 import boto3
 from psycopg2 import connect, extras
 from psycopg2.extensions import connection
 from bs4 import BeautifulSoup
 from dotenv import load_dotenv
+
 
 logging.basicConfig(filename='price_alert_logs.log', level=logging.INFO,
                     format='%(asctime)s - %(levelname)s - %(message)s')
@@ -32,7 +31,8 @@ UPDATE_AVAILABILITY_QUERY = """
             """
 
 CHECK_AVAILABILITY_QUERY = """
-            SELECT product_availability FROM products WHERE product_id = %s"""
+            SELECT product_availability FROM products WHERE product_id = %s
+            """
 
 EMAIL_QUERY = """
             SELECT users.email FROM users 
@@ -41,18 +41,20 @@ EMAIL_QUERY = """
             """
 
 INSERT_PRICE_QUERY = """
-            INSERT INTO prices (updated_at, product_id, price) 
-            VALUES %s
+            INSERT INTO prices (updated_at, product_id, price) VALUES (%s, %s, %s);
             """
 
-EMAIL_SENDER = "trainee.tayla.dawson@sigmalabs.co.uk"
+GET_ALL_PRODUCTS_QUERY = "SELECT * FROM products;"
 
-# SHARED FUNCTIONS ______________________________________________________________
+GET_LATEST_PRICE_QUERY = """
+            SELECT price FROM prices WHERE product_id = (%s) 
+            ORDER BY updated_at DESC LIMIT 1;
+            """
 
 
 def get_database_connection() -> connection:
     """
-    Return a connection our database.
+    Return a connection of database.
     """
     try:
         return connect(
@@ -78,31 +80,23 @@ def create_ses_client() -> boto3.client:
     )
     return ses_client
 
-# ONLY needed to update the database IF there is a change to the product
-
 
 def get_all_product_data(rds_conn: connection) -> extras.RealDictRow:
     """
-    Query database for data on all products that price data is required for
+    Query database for data on all products.
     """
     cur = rds_conn.cursor(cursor_factory=extras.RealDictCursor)
-    # Get all unique products from product table
-    cur.execute("SELECT * FROM products;")
+    cur.execute(GET_ALL_PRODUCTS_QUERY)
     rows = cur.fetchall()
     cur.close()
 
-    # return rows
     new_rows = [dict(row) for row in rows]
-    return new_rows  # A list of dictionaries of each product
-
-# UPDATING THE DATABASE______________________________________________________________
-
-# Scrape ASOS for latest info on price and availability
+    return new_rows
 
 
-def get_user_data(rds_conn: connection, product_id: int):
+def get_user_data(rds_conn: connection, product_id: int) -> list:
     """
-    Query database for users which are subscribed to given product
+    Query database for users which are subscribed to given product.
     """
     cur = rds_conn.cursor(cursor_factory=extras.RealDictCursor)
     cur.execute(EMAIL_QUERY, (product_id,))
@@ -112,24 +106,22 @@ def get_user_data(rds_conn: connection, product_id: int):
     return [entry['email'] for entry in rows]
 
 
-def update_product_availability(rds_conn: connection, product, availability: bool, ses_client: boto3.client):
+def update_product_availability(rds_conn: connection, product,
+                                availability: bool,
+                                ses_client: boto3.client) -> None:
     """
     Update product table to reflect availability of item as shown on webpage.
     Emails users about a change in availability. 
     """
 
-    # Update database with new stock info
     with rds_conn.cursor(cursor_factory=extras.RealDictCursor) as cur:
         cur.execute(UPDATE_AVAILABILITY_QUERY,
                     (availability, product['product_id']))
 
     rds_conn.commit()
 
-    # gets users that are subscribed to that product as list
-    # empty list if product id has no subscribers
     recipients = get_user_data(rds_conn, product['product_id'])
 
-    # back in stock, only send email if there are subs
     if availability == True and len(recipients) >= 1:
         for recipient in recipients:
             response = ses_client.send_email(
@@ -150,9 +142,11 @@ def update_product_availability(rds_conn: connection, product, availability: boo
                 }
             )
         logging.info(
-            f"Product {product['product_name']} back in stock. User Notified. Message ID: {response['MessageId']}")
+            f"""
+            Product {product['product_name']} back in stock. 
+            User Notified. Message ID: {response['MessageId']}"""
+        )
 
-    # out of stock, only send email if there are subs
     elif availability == False and len(recipients) >= 1:
         for recipient in recipients:
             response = ses_client.send_email(
@@ -173,10 +167,13 @@ def update_product_availability(rds_conn: connection, product, availability: boo
                 }
             )
         logging.info(
-            f"Product {product['product_name']} out of stock. User Notified. Message ID: {response['MessageId']}")
+            f"""
+            Product {product['product_name']} out of stock. 
+            User Notified. Message ID: {response['MessageId']}"""
+        )
 
 
-def check_product_availability(rds_conn: connection, product_id: int):
+def check_product_availability(rds_conn: connection, product_id: int) -> bool:
     """
     Checks what the current product availability is
     """
@@ -193,38 +190,30 @@ def get_latest_price_data(rds_conn: connection, product_id: dict) -> float:
 
     cur = rds_conn.cursor(cursor_factory=extras.RealDictCursor)
 
-    cur.execute("SELECT price FROM prices WHERE product_id = (%s) ORDER BY updated_at DESC LIMIT 1;",
+    cur.execute(GET_LATEST_PRICE_QUERY,
                 (product_id,))
     rows = cur.fetchall()
     cur.close()
 
     latest_price = [float(entry['price']) for entry in rows if entry['price']]
 
-    # TODO: Properly handle when there is no price for a given product - MAKE SURE THEY'RE SEEDED WITH ONE UPON ENTRY
-
     if len(latest_price) >= 1:
-        return latest_price[0]  # float of latest price for given product id
+        return latest_price[0]
 
 
-def insert_new_price_data(rds_conn: connection, product_id: int, new_price: float):
+def insert_new_price_data(rds_conn: connection,
+                          product_id: int, new_price: float) -> None:
     """
-    Insert product_id, current product price and timestamp into prices table in database.
+    Insert product_id, current product price, and timestamp into prices table in database.
     """
     current_timestamp = datetime.now()
-    product_id = str(product_id)
-    new_price = str(new_price)
 
     with rds_conn.cursor(cursor_factory=extras.RealDictCursor) as cur:
-        # cur.execute(
-        #     "INSERT INTO prices (updated_at, product_id, price) VALUES %s;",
-        #     ((current_timestamp, product_id, new_price)))
-        cur.execute(
-            f"INSERT INTO prices (updated_at, product_id, price) VALUES (CURRENT_TIMESTAMP, {product_id}, {new_price});")
+        cur.execute(INSERT_PRICE_QUERY,
+                    (current_timestamp, product_id, new_price))
 
     rds_conn.commit()
 
-
-# [TODO] Check the current timestamp works and is readable by database. Make secure
 
 def get_discount_amount(previous_price: float, new_price: float) -> dict:
     """
@@ -248,9 +237,9 @@ def get_discount_amount(previous_price: float, new_price: float) -> dict:
 
 def send_price_update_email(ses_client: boto3.client,
                             product_data: dict, recipients: list,
-                            old_price: float, new_price: float):
+                            old_price: float, new_price: float) -> None:
     """
-    Send email to user if product price changes
+    Send email to user if product price decreases in price. 
     """
 
     discount = get_discount_amount(old_price, new_price)
@@ -283,103 +272,106 @@ def send_price_update_email(ses_client: boto3.client,
             }
         )
         logging.info(
-            f"Product {product_data['product_name']} price reduced. User notified. Message ID: {response['MessageId']}")
+            f"""
+            Product {product_data['product_name']} price reduced. 
+            User notified. Message ID: {response['MessageId']}"""
+        )
 
 
-def scrape_asos_page(rds_conn: connection, item_in_database: dict, header: dict, ses_client: boto3.client, session) -> tuple:
+def scrape_asos_page(rds_conn: connection, item: dict,
+                     header: dict, ses_client: boto3.client, page_session) -> None:
     """
-    Scrapes an ASOS page to UPDATE DATABASE IF THERE IS A CHANGE IN PRICE.
+    Takes in one item as a dictionary.
+    Scrapes webpage and gets the new price.
+    Updates the availability of product.
+    Emails users if there is a change in availability or a decrease in price.
     """
-    # gets all the items and their ids, which have been provided from database
-    for item in item_in_database:  # goes through the list of dicts from get_products
-        page = session.get(
-            item["product_url"], headers=header, timeout=5)
-        soup = BeautifulSoup(page.text, "html.parser").find(
-            "script", type="application/ld+json")
-        asos_item_json = json.loads(soup.string)
 
-        # matches to an API entry
-        if "productID" in asos_item_json.keys():
-            price_endpoint = f"""{STARTER_ASOS_API}productIds={
-                asos_item_json['productID']
-                }&store=COM&currency=GBP"""
+    page = page_session.get(
+        item["product_url"], headers=header, timeout=5)
+    soup = BeautifulSoup(page.text, "html.parser").find(
+        "script", type="application/ld+json")
+    asos_item_json = json.loads(soup.string)
+
+    # Matching to an API entry.
+    if "productID" in asos_item_json.keys():
+        price_endpoint = f"""{STARTER_ASOS_API}productIds={
+            asos_item_json['productID']
+            }&store=COM&currency=GBP"""
+    else:
+        price_endpoint = f"""{STARTER_ASOS_API}productIds={
+            asos_item_json['@graph'][0]['productID']
+            }&store=COM&currency=GBP"""
+
+    product_api_result = requests.get(price_endpoint, timeout=5).json()
+
+    new_scraped_price = product_api_result[0]["productPrice"]["current"]["value"]
+    product_id_db = item['product_id']
+
+    # Updating the availability.
+    sizes = product_api_result[0]['variants']
+    availabilities = []
+    for size in sizes:
+        if size["isInStock"] == True:
+            availabilities.append(size["isInStock"])
         else:
-            price_endpoint = f"""{STARTER_ASOS_API}productIds={
-                asos_item_json['@graph'][0]['productID']
-                }&store=COM&currency=GBP"""
+            availabilities.append(size["isInStock"])
 
-        product_api_result = requests.get(price_endpoint, timeout=5).json()
+    if True in availabilities:
+        asos_item_json["is_in_stock"] = True
+        prev_availability = check_product_availability(
+            rds_conn, product_id_db)
 
-        # new price and current product id
-        new_scraped_price = product_api_result[0]["productPrice"]["current"]["value"]
-        product_id_db = item['product_id']
+        if prev_availability != True:
+            # Updating database and alerting users if item now in stock.
+            update_product_availability(conn, item, True, ses_client)
 
-        # updating the availability
-        # to make it less complicated, its just going to update the availability every time for now
-        sizes = product_api_result[0]['variants']
-        availabilities = []
-        for size in sizes:
-            if size["isInStock"] == True:
-                availabilities.append(size["isInStock"])
-            else:
-                availabilities.append(size["isInStock"])
+        prev_price = get_latest_price_data(rds_conn, product_id_db)
+        new_price = new_scraped_price
 
-        if True in availabilities:
-            asos_item_json["is_in_stock"] = True
-            prev_availability = check_product_availability(
-                rds_conn, product_id_db)
+        if new_price and prev_price and new_price != prev_price:
+            # Adding new price to database if it has changed.
+            insert_new_price_data(
+                rds_conn, product_id_db, new_scraped_price)
 
-            if prev_availability != True:
-                # updates db and alerts users if now in stock
-                update_product_availability(conn, item, True, ses_client)
+            if new_price < prev_price:
+                recipients = get_user_data(rds_conn, product_id_db)
+                if len(recipients) >= 1:
+                    send_price_update_email(
+                        ses_client, item, recipients, prev_price, new_price)
 
-            # compare old and new price
-            prev_price = get_latest_price_data(rds_conn, product_id_db)
-            new_price = new_scraped_price
+    else:
+        asos_item_json["is_in_stock"] = False
+        prev_availability = check_product_availability(
+            rds_conn, product_id_db)
 
-            print(new_price, prev_price)
+        if prev_availability != False:
+            update_product_availability(conn, item, False, ses_client)
 
-            if new_price and prev_price and new_price != prev_price:
-                # add new price to database if it has changed
-                insert_new_price_data(
-                    rds_conn, product_id_db, new_scraped_price)
-
-                if new_price < prev_price:
-                    recipients = get_user_data(rds_conn, product_id_db)
-                    if len(recipients) >= 1:
-                        send_price_update_email(
-                            ses_client, item, recipients, prev_price, new_price)
-
-        else:
-            asos_item_json["is_in_stock"] = False
-            prev_availability = check_product_availability(
-                rds_conn, product_id_db)
-
-            if prev_availability != False:
-                # updates db and alerts users if now out of stock
-                update_product_availability(conn, item, False, ses_client)
-
-
-# SENDING EMAILS______________________________________________________________
-
-# [TODO] A function that finds all user info (user id --> email) from subscriptions for a given product id
-                # Query subscriptions table for all subs with that product id
-                # for each of those user ids, query the user table for their emails
-                # store these emails in a list
-                # send price alert email to each of them
-                # embed this function in the asos scraper function
 
 if __name__ == "__main__":
 
     load_dotenv()
+    EMAIL_SENDER = environ['SENDER_EMAIL_ADDRESS']
 
     conn = get_database_connection()
     email_client = create_ses_client()
     headers = {'user-agent': environ["USER_AGENT"]}
     products = get_all_product_data(conn)
-    session = requests.Session()
-    # asos_data = scrape_asos_page(
-    #     conn, products, headers, email_client, session)
+    # session = requests.Session()
 
-    # asos_data
-    scrape_asos_page(conn, products, headers, email_client, session)
+    with concurrent.futures.ThreadPoolExecutor() as multiprocessor:
+
+        session = requests.Session()
+        adapter = requests.adapters.HTTPAdapter(
+            pool_connections=100, pool_maxsize=100)
+        session.mount('http://', adapter)
+        session.mount('https://', adapter)
+
+        def partial_fetch_product_data(item):
+            """
+            Multiprocessing scrape asos function.
+            """
+            return scrape_asos_page(conn, item, headers, email_client, session)
+
+        multiprocessor.map(partial_fetch_product_data, products)

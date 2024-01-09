@@ -25,13 +25,7 @@ This pipeline acts as more of a web scraper that extracts data from an api and d
 
 
 #### Storage
-There are 2 options for storage:
-
-1. Short Term storage:
-    - This is a PostgreSQL server with an RDS database. 
-
-2. Long Term storage:
-    - This will be an S3 bucket containing csv files from each day. The csv files contain all of the data from the previous days RDS database and then resets the database ready for the current day. This will be triggered by an EventBridge. The triggered will is an ECS task that reads from the RDS and uploads the content to a csv file within an S3 bucket. 
+ This is a PostgreSQL server with an RDS database. 
 
 
 #### Emailing Service

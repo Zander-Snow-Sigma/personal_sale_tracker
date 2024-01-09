@@ -15,6 +15,8 @@ from cookies import set_cookies, clear_cookies_of_session
 from database import get_database_connection, load_all_database_info, get_user_info
 from rendering import render_dashboard, render_login_page
 
+WEBSITE_URL = "http://18.171.191.226:5000/"
+
 
 def authenticate_user(users: list[dict], email: str, password: str) -> dict | None:
     """
@@ -88,8 +90,8 @@ def main_display():
         df = pd.DataFrame(load_all_database_info(get_database_connection()))
         render_dashboard(df, users)
 
-        if st.sidebar.button("SaleTracker Website"):
-            webbrowser.open_new_tab("http://3.8.84.3:5000/")
+        st.sidebar.link_button("SaleTracker Website", WEBSITE_URL)
+
         if st.sidebar.button("Logout"):
             logout_of_dashboard(cookie_manager)
 

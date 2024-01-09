@@ -60,6 +60,9 @@ def load_all_database_info(db_conn: connection) -> DataFrame:
 
 
 def hash_password(password):
+    """
+    Hashes the passwords given.
+    """
     return bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt())
 
 

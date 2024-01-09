@@ -2,6 +2,7 @@
 API.
 """
 from os import environ, _Environ
+from datetime import datetime
 
 from boto3 import client
 from mypy_boto3_ses import SESClient
@@ -65,7 +66,7 @@ def insert_user_data(conn: connection, data_user: dict):
             EmailAddress=data_user['email'])
 
 
-def insert_product_data(conn: connection, data_product: dict):
+def insert_product_data_and_price_data(conn: connection, data_product: dict):
     """
     Inserts product data into products table in the required database.
     """
@@ -74,6 +75,7 @@ def insert_product_data(conn: connection, data_product: dict):
 
     cur.execute(PRODUCT_URL_SELECTION_QUERY)
     rows = cur.fetchall()
+    current_timestamp = datetime.now()
 
     product_urls = [row["product_name"] for row in rows]
 
@@ -89,6 +91,17 @@ def insert_product_data(conn: connection, data_product: dict):
                             data_product['image_URL'],
                             data_product['is_in_stock'],
                             data_product['website_name']))
+
+        product_id_query = "SELECT product_id FROM products WHERE product_url = (%s)"
+
+        cur.execute(product_id_query, (data_product["product_url"],))
+
+        product_id = cur.fetchone()
+
+        price_query = "INSERT INTO prices (updated_at, product_id, price) VALUES (%s, %s, %s)"
+        cur.execute(price_query, (current_timestamp,
+                                  product_id["product_id"],
+                                  data_product["price"]))
         conn.commit()
         cur.close()
 
@@ -178,7 +191,7 @@ def submit():
         }
 
         insert_user_data(connection, user_data)
-        insert_product_data(connection, product_data)
+        insert_product_data_and_price_data(connection, product_data)
         insert_subscription_data(connection, email, url)
 
         return render_template('/submitted_form/submitted_form.html')
@@ -219,7 +232,7 @@ def unsubscribe_index():
             return render_template('/unsubscribe/not_subscribed.html')
 
         user_products = get_products_from_email(conn, email)
-        print(user_products)
+
         for user in user_products:
             if user["product_availability"] == True:
                 user["available"] = "In Stock"

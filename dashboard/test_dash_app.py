@@ -202,6 +202,3 @@ def test_get_user_info(mock_hash_password, mock_connection):
         "last_name": "Smith",
         "password": "hashed_userPassword"
     }
-
-
-############ rendering.py ############

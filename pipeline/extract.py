@@ -32,7 +32,6 @@ def scrape_asos_page(url: str, header: dict) -> dict:
         "script", type="application/ld+json")
     try:
         product_data = json.loads(soup.string)
-        print(product_data)
 
         wanted_prod_data = {
             "product_url": url,
@@ -66,7 +65,7 @@ def scrape_asos_page(url: str, header: dict) -> dict:
         if price:
             wanted_prod_data["price"] = price
         else:
-            wanted_prod_data["price"] = "Price not found"
+            wanted_prod_data["price"] = 0
 
         availabilities = []
         for size in sizes:

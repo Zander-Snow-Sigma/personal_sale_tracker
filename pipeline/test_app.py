@@ -2,8 +2,6 @@
 Unit tests for the file app.py.
 """
 
-import pytest
-import boto3
 from dotenv import load_dotenv
 from unittest.mock import MagicMock, patch
 
@@ -126,29 +124,6 @@ def test_insert_subscription_data_no_insert():
     insert_subscription_data(mock_db_connection, test_email, test_url)
 
     assert mock_execute.call_count == 3
-
-
-# def test_insert_subscription_data_correct():
-#     """
-#     Tests that execute is called four times when the subscription is not in the database.
-#     """
-
-#     test_email = "test@email.com"
-#     test_url = "test_url"
-
-#     mock_data = None
-
-#     mock_db_connection = MagicMock()
-#     mock_execute = mock_db_connection.cursor().execute
-#     mock_fetchone = mock_db_connection.cursor().fetchone
-#     mock_get = mock_fetchone.get
-#     mock_get.return_value = {"data": "test"}
-
-#     # mock_fetchone.return_value = None
-
-#     insert_subscription_data(mock_db_connection, test_email, test_url)
-
-#     assert mock_execute.call_count == 4
 
 
 def test_get_products_from_email():

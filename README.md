@@ -55,6 +55,14 @@ There are many emailing services throughout this project:
 
 For this project, a dashboard is provided using Streamlit. The dashboard here is run as a service within an ECS cluster. The dashboard will read from the RDS so that it can obtain real-time data and it will also read from an S3 bucket to obtain historical data as well.
 
+The Dashboard contains two interfaces:
+  - Admin Dashboard
+    - Shows information that only the admin is allowed to see.
+  - User Dashboard
+    - All users have the same dashboard but catered to their products.
+
+![dashboard_wireframe](./diagrams/dashboard-wireframe.png)
+
 
 ## Entity Relationship Diagram (ERD)
 

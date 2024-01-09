@@ -69,6 +69,8 @@ def insert_user_data(conn: connection, data_user: dict):
 def insert_product_data_and_price_data(conn: connection, data_product: dict):
     """
     Inserts product data into products table in the required database.
+    Also inserts price data into the prices table if product has just been
+    added for the first time.
     """
 
     cur = conn.cursor(cursor_factory=extras.RealDictCursor)

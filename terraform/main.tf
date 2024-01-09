@@ -177,9 +177,9 @@ TASK_DEFINITION
 }
 
 
-# Price Alert
-resource "aws_ecs_task_definition" "c9-sale-tracker-update-prices-task-def" {
-  family = "c9-sale-tracker-update-prices-task-def"
+# Price Updates
+resource "aws_ecs_task_definition" "c9-sale-tracker-price-updates-task-def" {
+  family = "c9-sale-tracker-price-updates-task-def"
   requires_compatibilities = ["FARGATE"]
   network_mode             = "awsvpc"
   cpu                      = 1024
@@ -196,11 +196,18 @@ resource "aws_ecs_task_definition" "c9-sale-tracker-update-prices-task-def" {
       {"name": "DB_USER", "value": "${var.DB_USER}"},
       {"name": "SENDER_EMAIL_ADDRESS", "value": "${var.SENDER_EMAIL_ADDRESS}"},
       {"name": "AWS_ACCESS_KEY_ID", "value": "${var.AWS_ACCESS_KEY}"},
-      {"name": "AWS_SECRET_ACCESS_KEY", "value": "${var.AWS_SECRET_ACCESS_KEY}"}
+      {"name": "AWS_SECRET_ACCESS_KEY", "value": "${var.AWS_SECRET_ACCESS_KEY}"},
+      {"name": "USER_AGENT", "value": "${var.USER_AGENT}"}
     ],
-    "name": "c9-sale-tracker-price-alert",
-    "image": "129033205317.dkr.ecr.eu-west-2.amazonaws.com/c9-sale-tracker-price-alerts:latest",
-    "essential": true
+    "name": "c9-sale-tracker-update-prices",
+    "image": "129033205317.dkr.ecr.eu-west-2.amazonaws.com/c9-sale-tracker-price-updates:latest",
+    "essential": true,
+    "portMappings": [
+      {
+        "containerPort" : 80,
+        "hostPort"      : 80
+      }
+    ]
   }
 ]
 TASK_DEFINITION
@@ -263,7 +270,7 @@ resource "aws_iam_policy" "ecs-schedule-permissions" {
                 "ecs:RunTask"
             ],
             "Resource": [
-                "${aws_ecs_task_definition.c9-sale-tracker-rds-cleanup-task-def.arn}"
+                "${aws_ecs_task_definition.c9-sale-tracker-price-updates-task-def.arn}"
             ],
             "Condition": {
                 "ArnLike": {
@@ -324,8 +331,8 @@ resource "aws_iam_role_policy_attachment" "attach-ecs-policy" {
 
 
 # EventBridge Schedule
-resource "aws_scheduler_schedule" "c9-sale-tracker-update-prices-schedule" {
-  name        = "c9-sale-tracker-cleanup-schedule"
+resource "aws_scheduler_schedule" "c9-sale-tracker-price-updates-schedule" {
+  name        = "c9-sale-tracker-price-updates-schedule"
 
   flexible_time_window {
     mode = "OFF"
@@ -339,7 +346,7 @@ resource "aws_scheduler_schedule" "c9-sale-tracker-update-prices-schedule" {
     role_arn = aws_iam_role.iam_for_ecs.arn
 
     ecs_parameters {
-      task_definition_arn = aws_ecs_task_definition.c9-sale-tracker-update-prices-task-def.arn
+      task_definition_arn = aws_ecs_task_definition.c9-sale-tracker-price-updates-task-def.arn
       launch_type         = "FARGATE"
 
     network_configuration {

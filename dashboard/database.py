@@ -78,13 +78,12 @@ def get_user_info(conn: connection) -> list[dict]:
              "type": "admin",
              "first_name": "Admin",
              "last_name": "Admin"}
-
     admin["password"] = hash_password("adminPassword")
-    all_users = [
-    ]
-    all_users.append(admin)
-    cur = conn.cursor(cursor_factory=RealDictCursor)
 
+    all_users = []
+    all_users.append(admin)
+
+    cur = conn.cursor(cursor_factory=RealDictCursor)
     cur.execute("SELECT * FROM users;")
     users = cur.fetchall()
 

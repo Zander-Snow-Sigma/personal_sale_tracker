@@ -25,13 +25,7 @@ This pipeline acts as more of a web scraper that extracts data from an api and d
 
 
 #### Storage
-There are 2 options for storage:
-
-1. Short Term storage:
-    - This is a PostgreSQL server with an RDS database. 
-
-2. Long Term storage:
-    - This will be an S3 bucket containing csv files from each day. The csv files contain all of the data from the previous days RDS database and then resets the database ready for the current day. This will be triggered by an EventBridge. The triggered will is an ECS task that reads from the RDS and uploads the content to a csv file within an S3 bucket. 
+ This is a PostgreSQL server with an RDS database. 
 
 
 #### Emailing Service
@@ -54,6 +48,14 @@ There are many emailing services throughout this project:
 #### Dashboard
 
 For this project, a dashboard is provided using Streamlit. The dashboard here is run as a service within an ECS cluster. The dashboard will read from the RDS so that it can obtain real-time data and it will also read from an S3 bucket to obtain historical data as well.
+
+The Dashboard contains two interfaces:
+  - Admin Dashboard
+    - Shows information that only the admin is allowed to see.
+  - User Dashboard
+    - All users have the same dashboard but catered to their products.
+
+![dashboard_wireframe](./diagrams/dashboard-wireframe.png)
 
 
 ## Entity Relationship Diagram (ERD)

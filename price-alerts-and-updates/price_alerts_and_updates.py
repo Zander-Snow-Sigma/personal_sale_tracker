@@ -29,6 +29,8 @@ EMAIL_QUERY = """
             FULL OUTER JOIN subscriptions ON users.user_id = subscriptions.user_id 
             WHERE subscriptions.product_id = %s
             """
+# selects all emails of users that subscribe to that particular product
+
 UPDATE_AVAILABILITY_QUERY = """
             UPDATE products 
             SET product_availability = %s
@@ -147,7 +149,7 @@ def get_product_discount(rds_conn: connection, new_price: float, product: dict) 
     return discount_stats
 
 
-def send_stock_update_email(rds_conn: connection, ses_client: boto3.client, product_data: dict, back_in_stock: bool):
+def send_stock_update_email(rds_conn: connection, ses_client: boto3.client, product_data: dict, back_in_stock: bool, recipients: list):
     """
     Set sender, recipient and condition for email
     """

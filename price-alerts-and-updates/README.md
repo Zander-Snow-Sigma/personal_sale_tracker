@@ -2,9 +2,13 @@
 
 This folder should contain all code and resources required to run the update prices for the SaleTracker.
 
-The files in this folder are used update the prices and stock availability of products in the RDS database, as well as alerting users of any price reductions and stock changes.
+The files in this folder are used update the prices and stock availability of products in the RDS database, as well as alerting users in any of the following cases:
 
-## Installation and Requirements
+  - The product was out of stock and has gone back in stock.
+  - The product was in stock and has now gone out of stock.
+  - The product has decreased in price. 
+
+## ⚙️ Installation and Requirements
 
 It is recommended before stating any installations that you make a new virtual environment. 
 
@@ -27,10 +31,10 @@ It is recommended before stating any installations that you make a new virtual e
 
 ### Running the script 
 
-In order to run the API locally: `python3 update_price_and_send_alert.py`. 
+In order to run the API locally : `python3 update_price_and_send_alert.py`. 
 
 
-## Files 
+## 🗂️ Files 
 
 - `requirements.txt` : This file contains all the required packages to run any other files
 - `Dockerfile` : This file contains instructions to create a new docker image that runs `app.py`.
@@ -41,26 +45,3 @@ In order to run the API locally: `python3 update_price_and_send_alert.py`.
 
 - `templates` : Contains all of the files needed to format the API. 
 - `scripts`: contains bash scripts to help run various commands in the terminal.
-
-
-### update_price_and_send_alerts.py
-
-This script is triggered every 3 minutes. It updates the price of every item in the database
-and sends alerts to the subscribers of each product in the following cases:
-
-    - The product was out of stock and has gone back in stock.
-    - The product was in stock and has now gone out of stock.
-    - The product has decreased in price. 
-
-
-#### Required environment variables:
-
-USER_AGENT
-DB_USER
-DB_PASSWORD
-DB_PORT
-DB_HOST
-DB_NAME
-AWS_ACCESS_KEY_ID
-AWS_SECRET_ACCESS_KEY
-SENDER_EMAIL_ADDRESS

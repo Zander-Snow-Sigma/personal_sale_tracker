@@ -16,7 +16,7 @@ Ever lost out on buying a product because you wanted to wait until it was on sal
 ## Cloud Architecture
 A high level overview of the cloud architecture can be seen below:
 
-![architecture_diagram](./diagrams/architecture_diagram.png)
+![architecture_diagram](./diagrams/updated_architecture_diagram.jpeg)
 
 ### How it works
 

@@ -3,7 +3,7 @@
 This folder should contain all code and resources required to run the Dashboard for the SaleTracker.\
 The files in this folder are used extract information from the RDS database and render useful information from the extraction for users to visualise.
 
-## Installation and Requirements
+## ⚙️ Installation and Requirements
 
 - It is recommended before stating any installations that you make a new virtual environment. 
 - A new environment will be required for each folder in this repository.
@@ -13,13 +13,13 @@ The files in this folder are used extract information from the RDS database and 
 
 - Create a `.env` file with `touch .env`
 
-**Required env variables**:
+### Required env variables
 
-`DB_USER` : The user name to login to the database.\
-`DB_PASSWORD` : The password to login to the database.\
-`DB_PORT` : The port you are using.\
-`DB_HOST` : The host name or address of a database server.\
-`DB_NAME` : The name of your database.\
+`- DB_USER` : The user name to login to the database.
+`- DB_PASSWORD` : The password to login to the database.
+`- DB_PORT` : The port you are using.
+`- DB_HOST` : The host name or address of a database server.
+`- DB_NAME` : The name of your database.
 
 ### Running the Dashboard 
 

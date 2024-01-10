@@ -13,7 +13,7 @@ The files in this folder are used extract information from the RDS database and 
 
 - Create a `.env` file with `touch .env`
 
-**Required env variables**:
+### Required env variables
 
 `DB_USER` : The user name to login to the database.\
 `DB_PASSWORD` : The password to login to the database.\

@@ -244,7 +244,14 @@ def unsubscribe_index():
         user_first_name = [product["first_name"]
                            for product in user_products][0]
 
-        return render_template('unsubscribe/product_list.html', names=user_products, firstname=user_first_name, user_email=email)
+        num_of_products = len(user_products)
+        print(num_of_products)
+
+        return render_template('unsubscribe/product_list.html',
+                               names=user_products,
+                               firstname=user_first_name,
+                               user_email=email,
+                               num_products=num_of_products)
 
     return render_template('/unsubscribe/unsubscribe_website.html')
 

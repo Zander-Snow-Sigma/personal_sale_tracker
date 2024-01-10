@@ -109,7 +109,7 @@ def mock_ses_client():
 @patch("update_price_and_send_alerts.get_discount_amount")
 def test_send_price_update_email(mock_get_discount_amount, mock_ses_client):
     """
-    Test that discount function is called once and that an 
+    Test that the calculate discount function is called once and that an 
     email is sent to every user subscribed to a given product.
     """
 

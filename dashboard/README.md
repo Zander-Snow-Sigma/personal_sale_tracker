@@ -15,11 +15,11 @@ The files in this folder are used extract information from the RDS database and 
 
 ### Required env variables
 
-`DB_USER` : The user name to login to the database.\
-`DB_PASSWORD` : The password to login to the database.\
-`DB_PORT` : The port you are using.\
-`DB_HOST` : The host name or address of a database server.\
-`DB_NAME` : The name of your database.\
+`- DB_USER` : The user name to login to the database.
+`- DB_PASSWORD` : The password to login to the database.
+`- DB_PORT` : The port you are using.
+`- DB_HOST` : The host name or address of a database server.
+`- DB_NAME` : The name of your database.
 
 ### Running the Dashboard 
 

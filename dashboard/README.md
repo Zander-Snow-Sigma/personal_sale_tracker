@@ -27,7 +27,7 @@ In order to run the Dashboard locally : `streamlit run app.py`.
 
 In order to run the Dashboard on the cloud please follow the setup instructions when creating an ECR, run the ECS task and then use the public IP address with :8501 (default streamlit port) at the end for the Dashboard to run on the cloud. 
 
-## Files 
+## 🗂️ Files 
 
 - `requirements.txt` : This file contains all the required packages to run any other files
 - `Dockerfile` : This file contains instructions to create a new docker image that runs `app.py`.

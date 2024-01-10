@@ -3,7 +3,7 @@
 This folder should contain all code and resources required to run the Dashboard for the SaleTracker.\
 The files in this folder are used extract information from the RDS database and render useful information from the extraction for users to visualise.
 
-## Installation and Requirements
+## ⚙️ Installation and Requirements
 
 - It is recommended before stating any installations that you make a new virtual environment. 
 - A new environment will be required for each folder in this repository.

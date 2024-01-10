@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sale Tracker</title>
     <link href="https://fonts.googleapis.com/css2?family=Source+Sans+Pro:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link rel="icon" src="{{url_for('static', filename='../static/favicon.ico')}}">
     <style>
         * {
             margin: 0;
@@ -160,6 +161,7 @@
     </div>
     <h1>Subscriptions</h1>
     <p>Welcome {{ firstname }}! Please see your subscriptions below.</p>
+    <p>You are subscribed to <b>{{ num_products }}</b> products.</p>
     <input type="hidden" id="userEmail" value="{{ user_email }}">
     <table>
         <thead>

@@ -2,6 +2,7 @@
 Streamlit app that runs the Dashboard.
 """
 import logging
+from PIL import Image
 import webbrowser
 
 import bcrypt
@@ -11,11 +12,19 @@ from extra_streamlit_components.CookieManager import CookieManager
 import pandas as pd
 import streamlit as st
 
+
 from cookies import set_cookies, clear_cookies_of_session
 from database import get_database_connection, load_all_database_info, get_user_info
 from rendering import render_dashboard, render_login_page
 
 WEBSITE_URL = "http://18.171.191.226:5000/"
+LOGO_URL = "./static/favicon.ico"
+
+im = Image.open(LOGO_URL)
+st.set_page_config(
+    page_icon=im,
+    layout="wide",
+)
 
 
 def authenticate_user(users: list[dict], email: str, password: str) -> dict | None:

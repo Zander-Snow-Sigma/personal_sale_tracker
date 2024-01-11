@@ -219,7 +219,7 @@ def unsubscribe_index():
         emails = [row["email"] for row in rows]
 
         if email not in emails:
-            return render_template('/unsubscribe/not_subscribed.html')
+            return render_template('/subscriptions/not_subscribed.html')
 
         query = """SELECT subscriptions.user_id
                 FROM subscriptions
@@ -231,7 +231,7 @@ def unsubscribe_index():
         result = cur.fetchall()
 
         if not result:
-            return render_template('/unsubscribe/not_subscribed.html')
+            return render_template('/subscriptions/not_subscribed.html')
 
         user_products = get_products_from_email(conn, email)
 
@@ -246,13 +246,13 @@ def unsubscribe_index():
 
         num_of_products = len(user_products)
 
-        return render_template('unsubscribe/product_list.html',
+        return render_template('subscriptions/product_list.html',
                                names=user_products,
                                firstname=user_first_name,
                                user_email=email,
                                num_products=num_of_products)
 
-    return render_template('/unsubscribe/unsubscribe_website.html')
+    return render_template('/subscriptions/subscriptions_index.html')
 
 
 @app.route('/delete_subscription', methods=["POST"])

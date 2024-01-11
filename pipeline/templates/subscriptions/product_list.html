@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sale Tracker</title>
+    <link href="https://fonts.googleapis.com/css2?family=Source+Sans+Pro:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link rel="icon" href="{{url_for('static', filename='../static/favicon.ico')}}">
+    <link rel="stylesheet" href="../static/subscriptions/product_list_styles.css">
+</head>
+<body>
+    <script src="../static/subscriptions/product_list.js"></script>
+    <div class="buttons-container">
+        <button id="return_to_homepage_button" onclick='window.location.href = "./"'>Homepage</button>
+        <button id="unsubscribe" onclick='window.location.href = "./subscriptions"'>View Subscriptions</button>
+        <button id="add_product_button" onclick='window.location.href = "./addproducts"'>Add Product</button>
+    </div>
+    <h1>Subscriptions</h1>
+    <p>Welcome {{ firstname }}! Please see your subscriptions below.</p>
+    <p>You are subscribed to <b>{{ num_products }}</b> products.</p>
+    <input type="hidden" id="userEmail" value="{{ user_email }}">
+    <table>
+        <thead>
+            <tr>
+                <th class="center">Action</th>
+                <th class="center">Product Name</th>
+                <th class="center">Image</th>
+                <th class="center">Availability</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for item in names %}
+                <tr>
+                    <td>
+                        <button onclick="deleteItem(this, '{{ item.product_name }}')">Delete</button>
+                    </td>
+                    <td><a href="{{ item.product_url }}">{{ item.product_name }}</a></td>
+                    <td><img class="image" src="{{ item.image_url }}"/></td>
+                    <td class="available">{{ item.available }}</td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</body>
+</html>

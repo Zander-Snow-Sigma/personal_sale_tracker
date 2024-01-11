@@ -47,6 +47,6 @@ Folders:
     - `config.toml` : A configuration file required to set the streamlit theme. 
 
 
-## Wireframe
+## 📊 Wireframe
 
 ![dashboard_wireframe](../diagrams/dashboard-wireframe.png)

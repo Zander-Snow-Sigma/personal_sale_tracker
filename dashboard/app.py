@@ -17,7 +17,7 @@ from cookies import set_cookies, clear_cookies_of_session
 from database import get_database_connection, load_all_database_info, get_user_info
 from rendering import render_dashboard, render_login_page
 
-WEBSITE_URL = "http://18.171.191.226:5000/"
+WEBSITE_URL = "http://3.10.142.198:5000/"
 LOGO_URL = "./static/favicon.ico"
 
 im = Image.open(LOGO_URL)

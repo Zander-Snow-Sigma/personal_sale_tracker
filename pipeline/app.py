@@ -140,11 +140,13 @@ def get_products_from_email(conn: connection, email: str) -> list:
     """
     cur = conn.cursor(cursor_factory=extras.RealDictCursor)
 
-    query = """SELECT users.first_name, products.product_name,products.product_url, products.product_id, products.image_url, products.product_availability
+    query = """SELECT DISTINCT ON (prices.product_id) users.first_name, products.product_name,products.product_url, products.product_id, products.image_url, products.product_availability, prices.price
                 FROM users
                 JOIN subscriptions ON users.user_id = subscriptions.user_id
                 JOIN products ON subscriptions.product_id = products.product_id
-                WHERE users.email = (%s);"""
+                JOIN prices ON products.product_id = prices.product_id
+                WHERE users.email = (%s)
+                ORDER BY prices.product_id, prices.updated_at DESC;"""
     cur.execute(query, (email,))
 
     return cur.fetchall()
@@ -243,6 +245,8 @@ def unsubscribe_index():
 
         user_first_name = [product["first_name"]
                            for product in user_products][0]
+
+        print(user_products)
 
         num_of_products = len(user_products)
 

@@ -26,6 +26,7 @@
                 <th class="center">Product Name</th>
                 <th class="center">Image</th>
                 <th class="center">Availability</th>
+                <th class="center">Current Price</th>
             </tr>
         </thead>
         <tbody>
@@ -37,6 +38,7 @@
                     <td><a href="{{ item.product_url }}">{{ item.product_name }}</a></td>
                     <td><img class="image" src="{{ item.image_url }}"/></td>
                     <td class="available">{{ item.available }}</td>
+                    <td class="price">£{{ '%0.2f'| format(item.price|float) }}</td>
                 </tr>
             {% endfor %}
         </tbody>

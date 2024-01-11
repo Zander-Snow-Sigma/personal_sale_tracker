@@ -93,6 +93,12 @@
             padding: 8px;
         }
 
+        .price {
+            text-align: center;
+            padding: 8px;
+            min-width: 150px;
+        }
+
         .center {
             text-align: center;
             padding: 8px;

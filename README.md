@@ -1,4 +1,4 @@
-# Sales Tracker
+# ![logo](./pipeline/static/Logo.png) Sales Tracker
 
 Welcome to the Sales Tracker Repository!
 

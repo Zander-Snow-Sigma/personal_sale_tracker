@@ -1,4 +1,4 @@
-# API Pipeline Script
+# 🌐 API Pipeline Script
 
 This folder should contain all code and resources required to run the pipeline/scraper for the SaleTracker.\
 The files in this folder are used scrape information from various websites, extract, and then load it into the database.

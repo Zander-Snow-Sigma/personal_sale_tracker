@@ -1,10 +1,10 @@
 """
 Script to test the dashboard app. 
 """
-import pytest
 import bcrypt
-from unittest.mock import patch, MagicMock
 import pandas as pd
+import pytest
+from unittest.mock import patch, MagicMock
 
 from app import authenticate_user, handle_login, logout_of_dashboard
 from database import get_database_connection, load_all_database_info, get_user_info

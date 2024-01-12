@@ -1,8 +1,6 @@
 """
 Script with rendering functions used to show streamlit displays.
 """
-import webbrowser
-
 import pandas as pd
 from pandas import DataFrame, Series
 import streamlit as st

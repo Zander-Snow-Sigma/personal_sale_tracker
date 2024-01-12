@@ -1,6 +1,9 @@
 """
 Functions to visualise data on streamlit.
 """
+
+from datetime import datetime
+
 import altair as alt
 import pandas as pd
 from pandas import DataFrame
@@ -61,7 +64,14 @@ def get_price_of_products_over_time(df: DataFrame) -> alt.vegalite.v5.api.Chart:
 
     df['Price'] = df['Price'].astype(float)
 
-    line_chart = alt.Chart(df).mark_line().encode(
+    ext = df.sort_values('Updated At').groupby('Product ID').tail(1)
+    ext_date = ext['Updated At']
+    ext_date = ext_date.apply(lambda x: datetime.now())
+    ext['Updated At'] = ext_date
+
+    df = pd.concat([df, ext])
+
+    line_chart = alt.Chart(df).mark_line(interpolate="step").encode(
         x=alt.X('Updated At:T', axis=alt.Axis(title='Time')),
         y=alt.Y('Price:Q', axis=alt.Axis(title='Price')),
         color=alt.Color('Product Name:N', legend=alt.Legend(

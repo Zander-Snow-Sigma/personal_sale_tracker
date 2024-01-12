@@ -14,17 +14,19 @@ from visualisations import (get_latest_price_readings,
 FIRST_PRODUCT = 0
 DEFAULT_MIN = 1
 DEFAULT_PRODUCT = 3
+LOGO_URL = "./static/Logo.png"
 
 
 def render_login_page() -> tuple:
     """
     Returns the input buttons for the login page and creates the login page.
     """
+    col1, col2, col3 = st.columns(3)
+
+    with col2:
+        st.image(LOGO_URL, use_column_width=True)
     st.markdown("""
-        <h1>
-            <center><span style='color: #007bff;'>Sale</span>Tracker Dashboard</center>
-        </h1>
-        <h2><center>Please Login</center></h2>
+        <h3><center>Please Login</center></h3>
         """, unsafe_allow_html=True)
 
     # Prompts users to input their email and password.

@@ -15,5 +15,6 @@ COPY app.py .
 
 COPY .streamlit ./.streamlit
 COPY .streamlit/config.toml ./.streamlit
+COPY static ./static
 
 CMD streamlit run app.py

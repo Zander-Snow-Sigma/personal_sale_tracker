@@ -152,9 +152,7 @@ def insert_subscription_data(conn: connection, user_email: str, product_url: str
     cur.execute(check_query, (user_id, product_id))
 
     if cur.fetchone() is None:
-        insert_query = INSERT_INTO_SUBSCRIPTIONS_QUERY
-
-        cur.execute(insert_query, (user_id, product_id))
+        cur.execute(INSERT_INTO_SUBSCRIPTIONS_QUERY, (user_id, product_id))
 
         conn.commit()
 

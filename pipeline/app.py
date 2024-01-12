@@ -77,8 +77,7 @@ def insert_user_data(conn: connection, data_user: dict):
         cur.close()
 
     else:
-        query = INSERT_USER_DATA_QUERY
-        cur.execute(query, (data_user["email"],
+        cur.execute(INSERT_USER_DATA_QUERY, (data_user["email"],
                             data_user["first_name"],
                             data_user["last_name"]))
 

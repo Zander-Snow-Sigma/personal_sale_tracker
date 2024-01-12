@@ -25,6 +25,9 @@ The files in this folder are used extract information from the RDS database and 
 
 In order to run the Dashboard locally : `streamlit run app.py`. 
 
+As a user, in order to log in please use the **email address you subscribed to a product with**.\
+Your password will be: `userPassword`
+
 In order to run the Dashboard on the cloud please follow the setup instructions when creating an ECR, run the ECS task and then use the public IP address with :8501 (default streamlit port) at the end for the Dashboard to run on the cloud. 
 
 ## 🗂️ Files 

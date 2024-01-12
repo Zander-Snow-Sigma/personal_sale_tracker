@@ -165,8 +165,7 @@ def get_products_from_email(conn: connection, email: str) -> list:
     """
     cur = conn.cursor(cursor_factory=extras.RealDictCursor)
 
-    query = GET_PRODUCTS_FROM_EMAIL_QUERY
-    cur.execute(query, (email,))
+    cur.execute(GET_PRODUCTS_FROM_EMAIL_QUERY, (email,))
 
     return cur.fetchall()
 

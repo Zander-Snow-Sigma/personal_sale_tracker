@@ -1,9 +1,9 @@
 """
 Unit tests for the file app.py.
 """
+from unittest.mock import MagicMock, patch
 
 from dotenv import load_dotenv
-from unittest.mock import MagicMock, patch
 
 from app import insert_user_data, insert_product_data, insert_subscription_data, get_products_from_email
 
@@ -147,7 +147,9 @@ def test_get_products_from_email():
 @patch("app.scrape_asos_page")
 @patch("app.get_database_connection")
 @patch("app.render_template")
-def test_submit_post(mock_render_template, mock_get_database_connection, mock_scrape_asos_page, mock_insert_user_data, mock_insert_product_data, mock_insert_subscription_data, api_client):
+def test_submit_post(mock_render_template, mock_get_database_connection,
+                     mock_scrape_asos_page, mock_insert_user_data,
+                     mock_insert_product_data, mock_insert_subscription_data, api_client):
     """
     Tests a post request to the addproducts returns a 200 status code.
     """
@@ -170,7 +172,9 @@ def test_submit_post(mock_render_template, mock_get_database_connection, mock_sc
 @patch("app.scrape_asos_page")
 @patch("app.get_database_connection")
 @patch("app.render_template")
-def test_submit_get(mock_render_template, mock_get_database_connection, mock_scrape_asos_page, mock_insert_user_data, mock_insert_product_data, mock_insert_subscription_data, api_client):
+def test_submit_get(mock_render_template, mock_get_database_connection,
+                    mock_scrape_asos_page, mock_insert_user_data,
+                    mock_insert_product_data, mock_insert_subscription_data, api_client):
     """
     Tests a get request to the addproducts returns a 200 status code.
     """
@@ -188,7 +192,9 @@ def test_submit_get(mock_render_template, mock_get_database_connection, mock_scr
 @patch("app.scrape_asos_page")
 @patch("app.get_database_connection")
 @patch("app.render_template")
-def test_subscriptions_post(mock_render_template, mock_get_database_connection, mock_scrape_asos_page, mock_insert_user_data, mock_insert_product_data, mock_insert_subscription_data, api_client):
+def test_subscriptions_post(mock_render_template, mock_get_database_connection,
+                            mock_scrape_asos_page, mock_insert_user_data,
+                            mock_insert_product_data, mock_insert_subscription_data, api_client):
     """
     Tests a post request to the subscriptions page returns a 200 status code.
     """

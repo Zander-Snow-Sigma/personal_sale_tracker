@@ -1,4 +1,4 @@
-# ![logo](./pipeline/static/Logo.png) Sales Tracker
+# <img src='./diagrams/Logo.png' width='300'>
 
 Welcome to the Sales Tracker Repository!
 
@@ -66,7 +66,7 @@ An ERD which clearly describes the tables in the schema and the data stored in e
 
 #### Users Table
 
-This table will be where the users personal information will be uploaded to. This includes their email, first and last name, and phone number. The email and phone number are essential fields that are required depending on whether the user wants to be notified by email or text message. 
+This table will be where the users personal information will be uploaded to. This includes their email, first and last name. 
 
 #### User Preference Table
 
@@ -78,7 +78,7 @@ This table contains the information necessary for the product when initially upl
 
 #### Prices Table
 
-This table will be continuously updated and will contain the price of each product over time. This table refers to the product id whilst including the price, and the time the price was recorded.
+This table will be updated when a price change is made and will contain the price of each product over time. This table refers to the product id whilst including the price, and the time the price was recorded.
 
 
 #### Websites Table
@@ -91,6 +91,5 @@ Within each folder, there is a README that explains specifically its role. But t
 - `dashboard` - contains code related to the dashboarding service.
 - `diagrams` - contains all of the diagrams required for all README files.
 - `pipeline` - contains the code that extracts information from various websites / APIs and the uploads it to an RDS.
-- `price-alert-script` - contains code related to sending a user an email depending on when if a price has dropped.
+- `price-alerts-and-updates` - contains code related to sending a user an email depending on when if a price has dropped or if a products availability has changed.
 - `terraform` - contains terraform files that setup most of the cloud infrastructure needed.
-- `update-price-table` - contains pipeline code for updating the prices table in the RDS.

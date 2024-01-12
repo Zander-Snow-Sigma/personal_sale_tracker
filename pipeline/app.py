@@ -246,7 +246,6 @@ def unsubscribe_index():
         user_first_name = [product["first_name"]
                            for product in user_products][0]
 
-        print(user_products)
 
         num_of_products = len(user_products)
 

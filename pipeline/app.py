@@ -119,9 +119,7 @@ def insert_product_data_and_price_data(conn: connection, data_product: dict):
                             data_product['is_in_stock'],
                             data_product['website_name']))
 
-        product_id_query = PRODUCT_ID_QUERY
-
-        cur.execute(product_id_query, (data_product["product_url"],))
+        cur.execute(PRODUCT_ID_QUERY, (data_product["product_url"],))
 
         product_id = cur.fetchone()
 

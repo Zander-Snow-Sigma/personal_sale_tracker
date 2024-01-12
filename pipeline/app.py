@@ -112,8 +112,7 @@ def insert_product_data_and_price_data(conn: connection, data_product: dict):
 
     else:
 
-        query = INSERT_INTO_PRODUCTS_QUERY
-        cur.execute(query, (data_product.get('product_name', 'Unknown'),
+        cur.execute(INSERT_INTO_PRODUCTS_QUERY, (data_product.get('product_name', 'Unknown'),
                             data_product['product_url'],
                             data_product['image_URL'],
                             data_product['is_in_stock'],

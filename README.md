@@ -21,7 +21,7 @@ A high level overview of the cloud architecture can be seen below:
 ### How it works
 
 #### Pipeline
-This pipeline acts as more of a web scraper that extracts data from an api and different web pages. This is then loaded into a database for short term storage (see [Storage](#Storage)). This is triggers every time a user makes a POST request to the API (i.e. adding a product/deleting a subscription).
+This pipeline acts as more of a web scraper that extracts data from an api and different web pages. This is then loaded into a database (see [Storage](#Storage)). This is triggers every time a user makes a POST request to the API (i.e. adding a product/deleting a subscription).
 
 
 #### Storage

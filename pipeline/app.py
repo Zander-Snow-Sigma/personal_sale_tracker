@@ -144,8 +144,7 @@ def insert_subscription_data(conn: connection, user_email: str, product_url: str
     cur.execute(user_query, (user_email,))
     user_id = cur.fetchone().get('user_id')
 
-    product_query = PRODUCT_ID_QUERY
-    cur.execute(product_query, (product_url,))
+    cur.execute(PRODUCT_ID_QUERY (product_url,))
     product_id = cur.fetchone().get('product_id')
 
     check_query = SELECT_SUB_BY_PRODUCT_AND_USER_QUERY

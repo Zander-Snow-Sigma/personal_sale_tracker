@@ -91,6 +91,5 @@ Within each folder, there is a README that explains specifically its role. But t
 - `dashboard` - contains code related to the dashboarding service.
 - `diagrams` - contains all of the diagrams required for all README files.
 - `pipeline` - contains the code that extracts information from various websites / APIs and the uploads it to an RDS.
-- `price-alert-script` - contains code related to sending a user an email depending on when if a price has dropped.
+- `price-alert-script` - contains code related to sending a user an email depending on when if a price has dropped or if a products availability has changed.
 - `terraform` - contains terraform files that setup most of the cloud infrastructure needed.
-- `update-price-table` - contains pipeline code for updating the prices table in the RDS.

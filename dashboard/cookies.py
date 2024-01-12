@@ -1,7 +1,6 @@
 """
 Creates cookies for the Dashboard.
 """
-import extra_streamlit_components as stx
 from extra_streamlit_components.CookieManager import CookieManager
 
 

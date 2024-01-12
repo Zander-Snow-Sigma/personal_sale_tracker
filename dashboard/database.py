@@ -4,9 +4,9 @@ Establishes a connection to the database.
 from os import environ
 
 import bcrypt
+from dotenv import load_dotenv
 import pandas as pd
 from pandas import DataFrame
-from dotenv import load_dotenv
 from psycopg2 import connect
 from psycopg2.extensions import connection
 from psycopg2.extras import RealDictCursor

@@ -6,15 +6,14 @@
     <title>Sale Tracker</title>
     <link href="https://fonts.googleapis.com/css2?family=Source+Sans+Pro:wght@300;400;600;700&display=swap" rel="stylesheet">
     <link rel="icon" href="{{url_for('static', filename='../static/favicon.ico')}}">
-    <link rel="stylesheet" href="../static/submitted_form/submitted_styles.css">
+    <link rel="stylesheet" href="../static/subscriptions/not_subscribed_styles.css">
 </head>
 <body>
-    <h1>Thank you for submitting your form!</h1>
-    <p>If this is your first time subscribing to a product, <b>please check your emails for an Amazon Web Services verification email</b>. This will need to be done in order for you to start receiving updates on your product.</p>
-    <p>Please choose an option you would like to do.</p>
+    <h1>You are not subscribed to anything.</h1>
+    <p>If you wish to subscribe to a product, please go to Add Product below.</p>
 
     <div class="buttons-container">
-        <button id="return_to_homepage_button" onclick='window.location.href = "./"'>Homepage</button>
+        <button id="homepage" onclick='window.location.href = "./"'>Homepage</button>
         <button id="unsubscribe" onclick='window.location.href = "./subscriptions"'>View Subscriptions</button>
         <button id="add_product_button" onclick='window.location.href = "./addproducts"'>Add Product</button>
     </div>

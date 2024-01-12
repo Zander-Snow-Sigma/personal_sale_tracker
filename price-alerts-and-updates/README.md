@@ -1,4 +1,4 @@
-# Price Updates Script
+# 💰 Price Updates Script
 
 This folder should contain all code and resources required to run the update prices for the SaleTracker.
 

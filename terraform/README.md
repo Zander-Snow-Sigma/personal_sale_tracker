@@ -1,4 +1,4 @@
-# Terraform
+# 🔧 Terraform
 This folder should contain all code and resources required to handle the infrastructure of the project.
 
 ## ⚙️ Installation and Requirements

@@ -1,4 +1,4 @@
-# API Pipeline Script
+# 🌐 API Pipeline Script
 
 This folder should contain all code and resources required to run the pipeline/scraper for the SaleTracker.\
 The files in this folder are used scrape information from various websites, extract, and then load it into the database.
@@ -40,6 +40,8 @@ In order to run the API on the cloud please follow the setup instructions when c
     - Please replace values in [] with the values you have in you `.env` file.
 - `extract.py` : Contains code that scrapes required information from the url given in a POST request.
 - `app.py` : Contains code needed to run the api and insert the required information into the RDS.
+- `test_app.py` : test suite for main api file 
+- `test_extract.py` : test suite for extract file
 
 ### Folders
 

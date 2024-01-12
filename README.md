@@ -1,4 +1,4 @@
-# ![logo](./pipeline/static/Logo.png) Sales Tracker
+# <img src='./diagrams/Logo.png' width='300'>
 
 Welcome to the Sales Tracker Repository!
 

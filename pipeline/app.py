@@ -234,9 +234,7 @@ def unsubscribe_index():
         if email not in emails:
             return render_template('/unsubscribe/not_subscribed.html')
 
-        query = GET_SUBS_BY_EMAIL_QUERY
-
-        cur.execute(query, (email,))
+        cur.execute(GET_SUBS_BY_EMAIL_QUERY, (email,))
 
         result = cur.fetchall()
 

@@ -29,11 +29,13 @@ SELECT_SUB_BY_PRODUCT_AND_USER_QUERY = "SELECT * FROM subscriptions WHERE user_i
 INSERT_INTO_SUBSCRIPTIONS_QUERY = "INSERT INTO subscriptions (user_id, product_id) VALUES (%s, %s);"
 SELECT_USERS_BY_EMAIL_QUERY = "SELECT user_id FROM users WHERE email = (%s);"
 GET_PRODUCTS_FROM_EMAIL_QUERY = """
-                SELECT users.first_name, products.product_name,products.product_url, products.product_id, products.image_url, products.product_availability
+                SELECT DISTINCT ON (prices.product_id) users.first_name, products.product_name,products.product_url, products.product_id, products.image_url, products.product_availability, prices.price
                 FROM users
                 JOIN subscriptions ON users.user_id = subscriptions.user_id
                 JOIN products ON subscriptions.product_id = products.product_id
-                WHERE users.email = (%s);  
+                JOIN prices ON products.product_id = prices.product_id
+                WHERE users.email = (%s)
+                ORDER BY prices.product_id, prices.updated_at DESC;  
                 """
 GET_SUBS_BY_EMAIL_QUERY = """
                 SELECT subscriptions.user_id
@@ -78,8 +80,8 @@ def insert_user_data(conn: connection, data_user: dict):
 
     else:
         cur.execute(INSERT_USER_DATA_QUERY, (data_user["email"],
-                            data_user["first_name"],
-                            data_user["last_name"]))
+                                             data_user["first_name"],
+                                             data_user["last_name"]))
 
         conn.commit()
         cur.close()
@@ -112,10 +114,10 @@ def insert_product_data_and_price_data(conn: connection, data_product: dict):
     else:
 
         cur.execute(INSERT_INTO_PRODUCTS_QUERY, (data_product.get('product_name', 'Unknown'),
-                            data_product['product_url'],
-                            data_product['image_URL'],
-                            data_product['is_in_stock'],
-                            data_product['website_name']))
+                                                 data_product['product_url'],
+                                                 data_product['image_URL'],
+                                                 data_product['is_in_stock'],
+                                                 data_product['website_name']))
 
         cur.execute(PRODUCT_ID_QUERY, (data_product["product_url"],))
 
@@ -140,7 +142,7 @@ def insert_subscription_data(conn: connection, user_email: str, product_url: str
     cur.execute(user_query, (user_email,))
     user_id = cur.fetchone().get('user_id')
 
-    cur.execute(PRODUCT_ID_QUERY (product_url,))
+    cur.execute(PRODUCT_ID_QUERY, (product_url,))
     product_id = cur.fetchone().get('product_id')
 
     cur.execute(SELECT_SUB_BY_PRODUCT_AND_USER_QUERY, (user_id, product_id))
@@ -156,7 +158,6 @@ def get_products_from_email(conn: connection, email: str) -> list:
     Returns list of products the user has subscribed to.
     """
     cur = conn.cursor(cursor_factory=extras.RealDictCursor)
-
 
     cur.execute(GET_PRODUCTS_FROM_EMAIL_QUERY, (email,))
 
@@ -242,6 +243,7 @@ def unsubscribe_index():
             return render_template('/subscriptions/not_subscribed.html')
 
         user_products = get_products_from_email(conn, email)
+        print(user_products)
 
         for user in user_products:
             if user["product_availability"] == True:
@@ -251,7 +253,6 @@ def unsubscribe_index():
 
         user_first_name = [product["first_name"]
                            for product in user_products][0]
-
 
         num_of_products = len(user_products)
 

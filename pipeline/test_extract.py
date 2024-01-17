@@ -59,7 +59,8 @@ class TestScrapeAsosPage(unittest.TestCase):
 
         mock_get_domain_name.return_value = ASOS_DOMAIN
 
-        result = scrape_asos_page(EXAMPLE_ASOS_URL, {'HeaderKey':'HeaderValue'})
+        result = scrape_asos_page(
+            EXAMPLE_ASOS_URL, {'HeaderKey': 'HeaderValue'})
         print(result)
 
         self.assertIn('Black Coat', result.get('product_name'))
@@ -70,7 +71,7 @@ class TestScrapeAsosPage(unittest.TestCase):
     @patch('extract.get_domain_name')
     def test_scrape_website_returns_dict(
         self, mock_get_domain_name, mock_beautiful_soup, mock_requests_get
-        ):
+    ):
         """
         Tests that the web scraper function returns a dictionary.
         """
@@ -84,6 +85,7 @@ class TestScrapeAsosPage(unittest.TestCase):
 
         mock_get_domain_name.return_value = ASOS_DOMAIN
 
-        result = scrape_asos_page(EXAMPLE_ASOS_URL, {'HeaderKey':'HeaderValue'})
+        result = scrape_asos_page(
+            EXAMPLE_ASOS_URL, {'HeaderKey': 'HeaderValue'})
 
         self.assertIsInstance(result, dict)

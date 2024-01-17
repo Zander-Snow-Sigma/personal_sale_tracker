@@ -237,14 +237,12 @@ def get_discount_amount(previous_price: float, new_price: float) -> dict:
 
 def send_price_update_email(ses_client: boto3.client,
                             product_data: dict, recipients: list,
-                            old_price: float, new_price: float) -> None:
+                            old_price: float, new_price: float, sender: str) -> None:
     """
     Send email to user if product price decreases in price. 
     """
 
     discount = get_discount_amount(old_price, new_price)
-
-    sender = EMAIL_SENDER
 
     for recipient in recipients:
         response = ses_client.send_email(
@@ -338,7 +336,7 @@ def scrape_asos_page(rds_conn: connection, item: dict,
                 recipients = get_user_data(rds_conn, product_id_db)
                 if len(recipients) >= 1:
                     send_price_update_email(
-                        ses_client, item, recipients, prev_price, new_price)
+                        ses_client, item, recipients, prev_price, new_price, EMAIL_SENDER)
 
     else:
         asos_item_json["is_in_stock"] = False

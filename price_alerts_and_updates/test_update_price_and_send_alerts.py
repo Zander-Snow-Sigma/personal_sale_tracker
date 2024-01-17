@@ -113,6 +113,8 @@ def test_send_price_update_email(mock_get_discount_amount, mock_ses_client):
     email is sent to every user subscribed to a given product.
     """
 
+    test_sender = "test@email.com"
+
     mock_get_discount_amount.return_value = {
         "percentage_discount": 10.0,
         "new_price": 90.0,
@@ -132,7 +134,7 @@ def test_send_price_update_email(mock_get_discount_amount, mock_ses_client):
     old_price = 100.0
     new_price = 90.0
     send_price_update_email(mock_ses, product_data,
-                            recipients, old_price, new_price)
+                            recipients, old_price, new_price, test_sender)
 
     mock_get_discount_amount.assert_called_once_with(old_price, new_price)
 

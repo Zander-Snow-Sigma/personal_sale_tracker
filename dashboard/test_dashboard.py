@@ -6,7 +6,7 @@ import pandas as pd
 import pytest
 from unittest.mock import patch, MagicMock
 
-from app import authenticate_user, handle_login, logout_of_dashboard
+from dashboard import authenticate_user, handle_login, logout_of_dashboard
 from database import get_database_connection, load_all_database_info, get_user_info
 
 
@@ -49,9 +49,9 @@ def test_reject_unknown_user(users):
     assert user is None
 
 
-@patch('app.authenticate_user')
-@patch('app.st.session_state')
-@patch('app.st.error')
+@patch('dashboard.authenticate_user')
+@patch('dashboard.st.session_state')
+@patch('dashboard.st.error')
 def test_handle_login(mock_st_error, mock_session_state, mock_authenticate_user):
     """
     Tests that an error is not called, and that logged_in, user_email
@@ -70,7 +70,7 @@ def test_handle_login(mock_st_error, mock_session_state, mock_authenticate_user)
     mock_st_error.assert_not_called()
 
 
-@patch('app.st.session_state')
+@patch('dashboard.st.session_state')
 def test_handle_logout(mock_session_state):
     """
     Tests that that logged_in, user_email and user_id are each 

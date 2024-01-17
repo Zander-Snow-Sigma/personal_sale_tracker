@@ -17,12 +17,13 @@ from rendering import render_dashboard, render_login_page
 
 
 WEBSITE_URL = "http://3.10.142.198:5000/"
-LOGO_URL = "./static/favicon.ico"
+LOGO_URL = "./dashboard/static/favicon.ico"
 
 im = Image.open(LOGO_URL)
 st.set_page_config(
     page_icon=im,
     layout="wide")
+
 
 def authenticate_user(users: list[dict], email: str, password: str) -> dict | None:
     """

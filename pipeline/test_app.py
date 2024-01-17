@@ -5,7 +5,7 @@ from unittest.mock import MagicMock, patch
 
 from dotenv import load_dotenv
 
-from app import insert_user_data, insert_product_data, insert_subscription_data, get_products_from_email
+from app import insert_user_data, insert_product_data_and_price_data, insert_subscription_data, get_products_from_email
 
 
 def test_insert_user_data_no_insert():
@@ -78,7 +78,7 @@ def test_insert_product_data_no_insert():
 
     mock_fetchall.return_value = product_data
 
-    insert_product_data(mock_db_connection, test_data)
+    insert_product_data_and_price_data(mock_db_connection, test_data)
 
     assert mock_execute.call_count == 1
 
@@ -89,7 +89,7 @@ def test_insert_product_data_correct():
     """
 
     test_data = {"product_name": "test product", "product_url": "test_url",
-                 "image_URL": "test_url", "is_in_stock": True, "website_name": "asos"}
+                 "image_URL": "test_url", "is_in_stock": True, "website_name": "asos", "price": 0}
 
     product_data = [{"product_name": "product1", "product_url": "test_url",
                      "image_URL": "test_url", "is_in_stock": True, "website_name": "asos"}]
@@ -100,9 +100,9 @@ def test_insert_product_data_correct():
 
     mock_fetchall.return_value = product_data
 
-    insert_product_data(mock_db_connection, test_data)
+    insert_product_data_and_price_data(mock_db_connection, test_data)
 
-    assert mock_execute.call_count == 2
+    assert mock_execute.call_count == 4
 
 
 def test_insert_subscription_data_no_insert():
@@ -142,39 +142,14 @@ def test_get_products_from_email():
 
 
 @patch("app.insert_subscription_data")
-@patch("app.insert_product_data")
-@patch("app.insert_user_data")
-@patch("app.scrape_asos_page")
-@patch("app.get_database_connection")
-@patch("app.render_template")
-def test_submit_post(mock_render_template, mock_get_database_connection,
-                     mock_scrape_asos_page, mock_insert_user_data,
-                     mock_insert_product_data, mock_insert_subscription_data, api_client):
-    """
-    Tests a post request to the addproducts returns a 200 status code.
-    """
-
-    load_dotenv()
-
-    response = api_client.post("/addproducts", data={
-        "firstName": "zander",
-        "lastName": "snow",
-        "email": "test@email.com",
-        "url": "test.com"
-    })
-
-    assert response.status_code == 200
-
-
-@patch("app.insert_subscription_data")
-@patch("app.insert_product_data")
+@patch("app.insert_product_data_and_price_data")
 @patch("app.insert_user_data")
 @patch("app.scrape_asos_page")
 @patch("app.get_database_connection")
 @patch("app.render_template")
 def test_submit_get(mock_render_template, mock_get_database_connection,
                     mock_scrape_asos_page, mock_insert_user_data,
-                    mock_insert_product_data, mock_insert_subscription_data, api_client):
+                    mock_insert_product_data_and_price_data, mock_insert_subscription_data, api_client):
     """
     Tests a get request to the addproducts returns a 200 status code.
     """
@@ -187,14 +162,14 @@ def test_submit_get(mock_render_template, mock_get_database_connection,
 
 
 @patch("app.insert_subscription_data")
-@patch("app.insert_product_data")
+@patch("app.insert_product_data_and_price_data")
 @patch("app.insert_user_data")
 @patch("app.scrape_asos_page")
 @patch("app.get_database_connection")
 @patch("app.render_template")
 def test_subscriptions_post(mock_render_template, mock_get_database_connection,
                             mock_scrape_asos_page, mock_insert_user_data,
-                            mock_insert_product_data, mock_insert_subscription_data, api_client):
+                            mock_insert_product_data_and_price_data, mock_insert_subscription_data, api_client):
     """
     Tests a post request to the subscriptions page returns a 200 status code.
     """

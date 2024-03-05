@@ -1,10 +1,10 @@
-# <img src='./diagrams/Logo.png' width='300'>
-
-Welcome to the Sales Tracker Repository!
+<div align="center">
+  <img src='./diagrams/Logo.png' width='300'>
+</div>
 
 Ever lost out on buying a product because you wanted to wait until it was on sale, and then the product sold out before you had a chance to buy it? Well with this repo that problem can disappear! All you have to do is subscribe to a product you want to track and be prepared to check your emails for when it goes on sale! It's as simple as that. 
 
-### Installation Tips
+## Installation Tips
 
 - It is recommended before stating any installations that you make a new virtual environment. 
   - To make a new virtual environment, **Please go to the folder you want to create a virtual environment in**:
